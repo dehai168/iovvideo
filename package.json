@@ -1,0 +1,25 @@
+{
+  "name": "iovvideo",
+  "version": "1.0.0",
+  "description": "h5 video，support flv,hls,   support h264,aac",
+  "main": "index.js",
+  "scripts": {
+    "startweb": "node server.js",
+    "startmedia": "node app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dehai168/iovvideo.git"
+  },
+  "author": "level",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dehai168/iovvideo/issues"
+  },
+  "homepage": "https://github.com/dehai168/iovvideo#readme",
+  "devDependencies": {
+    "express": "^4.17.1",
+    "node-media-server": "^2.1.0"
+  }
+}
