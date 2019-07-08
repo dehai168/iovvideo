@@ -6,34 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/flv.js/1.5.0/flv.min.js"></script>
     <title>直通视频</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
         }
 
-        .container {
-            width: 100%;
+        html,
+        body {
             height: 100%;
+            width: 100%;
             background-color: #191970;
         }
 
-        .view {
+        .container {
+            height: 100%;
+            width: 100%;
+        }
+
+        .container .view {
+            height: 100%;
             width: 100%;
         }
 
         .tool {
+            width: 100%;
             display: none;
         }
 
         .box {
             background-color: black;
+            text-align: center;
+            float: left;
         }
 
-        .box .title {
+        .box .info {
             height: 20px;
+            width: 100%;
             color: white;
+        }
+
+        .box .info .title {
+            float: left;
+        }
+
+        .box .info .channel {
+            float: right;
         }
 
         .greenborder {
@@ -45,20 +65,147 @@
 <body>
     <div class="container">
         <div class="view">
-            <div class="box">
-                <div class="title"></div>
-                <div class="video">
-                    <video src=""></video>
-                </div>
-            </div>
         </div>
         <div class="tool"></div>
     </div>
 </body>
 <script>
-    (function ($) {
-        
-    })($);
+    (function ($, window) {
+        var video = {
+            player: null,
+            test: function () {
+                return flvjs ? flvjs.isSupported() : false;
+            },
+            init: function (domid, url) {
+                var videoElement = document.getElementById(domid);
+                var flvPlayer = flvjs.createPlayer({
+                    type: 'flv',
+                    isLive: true,
+                    url: url,
+                });
+                flvPlayer.attachMediaElement(videoElement);
+                flvPlayer.on(flvjs.Events.ERROR, function (e) {
+                    console.log(e);
+                });
+                this.player = flvPlayer;
+            },
+            play: function () {
+                if (this.player) {
+                    this.player.load();
+                    this.player.play();
+                }
+            },
+            pause: function () {
+                if (this.player) {
+                    this.player.pause();
+                }
+            },
+
+            destory: function () {
+                if (this.player) {
+                    this.player.unload();
+                    this.player.detachMediaElement();
+                    this.player.destroy();
+                    this.player = null;
+                }
+            }
+        };
+        var app = {
+            containerHeight: 0,
+            containerWidth: 0,
+            playerList: [],
+            boxSize: 0,
+            getQueryString: function () {
+
+            },
+            initContainer: function () {
+                this.containerHeight = $(".container").height();
+                this.containerWidth = $(".container").width();
+                var that = this;
+                $(window).resize(function (e) {
+                    that.containerHeight = $(window).height();
+                    that.containerWidth = $(window).width();
+                    that.resizeBox();
+                });
+            },
+            boxTemplate: function (id) {
+                var array = [];
+                array.push('<div class="box" id="box_' + id + '">');
+                array.push('   <div class="info">');
+                array.push('        <div class="title"></div>');
+                array.push('        <div class="channel">通道:' + id + '</div>');
+                array.push('   </div>');
+                array.push('   <video id="video_' + id + '" autoplay="false"></video>');
+                array.push('</div>');
+                return array.join(' ');
+            },
+            initBox: function (boxSize) {
+                var html = [];
+                this.boxSize = boxSize;
+                for (let index = 0; index < this.boxSize; index++) {
+                    const temp = this.boxTemplate(index);
+                    html.push(temp);
+                }
+                $(".container>.view").html(html.join(''));
+                this.resizeBox();
+            },
+            resizeBox: function () {
+                var boxWidth = 0;
+                var boxHeight = 0;
+                switch (this.boxSize) {
+                    case 1:
+                        //boxWidth = this.containerWidth;
+                        //boxHeight = this.containerHeight;
+                        $("#box_0").css('width', '100%').css('height', '100%');
+                        //boxHeight = $("#box_0").width();
+                        $("#video_0").css('width', '100%')
+                        //$("#video_0").width((boxHeight - 25) * 16 / 9);
+                        break;
+                    case 2:
+                        boxWidth = this.containerWidth / 2;
+                        boxHeight = this.containerHeight;
+                        $("#box_0").height(boxHeight).width(boxWidth);
+                        $("#video_0").width(boxWidth);
+                        $("#box_1").height(boxHeight).width(boxWidth);
+                        $("#video_1").width(boxWidth);
+                        break;
+                    case 3:
+                        boxWidth = this.containerWidth / 2;
+                        boxHeight = this.containerHeight / 2;
+                        $("#box_0").height(boxHeight * 2).width(boxWidth);
+                        $("#video_0").width(boxWidth);
+                        $("#box_1").height(boxHeight).width(boxWidth);
+                        $("#video_1").width(boxWidth);
+                        $("#box_2").height(boxHeight).width(boxWidth);
+                        $("#video_2").width(boxWidth);
+                        break;
+                    case 4: break;
+                    default:
+                        break;
+                }
+            },
+            initPlayer: function () {
+                for (let index = 0; index < this.boxSize; index++) {
+                    var tempVideo = video;
+                    tempVideo.init("video_" + index, "http://106.12.124.219:8000/iptv/hks.flv");
+                    tempVideo.play();
+                    this.playerList.push(tempVideo);
+                }
+            },
+            destory: function () {
+                for (let index = 0; index < this.playerList.length; index++) {
+                    const element = this.playerList[index];
+                    element.destory();
+                }
+            },
+        };
+        $(function () {
+            app.initContainer();
+            app.initBox(1);
+            app.initPlayer();
+        });
+        window.app = app;
+    })($, window);
 </script>
 
 </html>
