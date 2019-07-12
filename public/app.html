@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://cdn.bootcss.com/flv.js/1.5.0/flv.min.js"></script>
-    <title>直通视频</title>
+    <title>实时直通视频</title>
     <style>
         * {
             margin: 0;
@@ -16,57 +16,195 @@
 
         html,
         body {
-            height: 100%;
-            width: 100%;
-            background-color: #191970;
+            font-size: 12px;
+            color: #333333;
         }
 
-        .container {
-            height: 100%;
-            width: 100%;
+        /*
+        容器
+        */
+        .view {
+            overflow: hidden;
         }
 
-        .container .view {
-            height: 100%;
+        /*
+        头部工具条
+        */
+        .top_tool {
             width: 100%;
+            height: 30px;
+            border-bottom: 1px solid #999999;
+            line-height: 30px;
         }
 
-        .tool {
-            width: 100%;
-            display: none;
-        }
-
-        .box {
-            background-color: black;
-            text-align: center;
+        .top_tool_left {
             float: left;
+            height: 30px;
         }
 
-        .box .info {
+        .top_tool_rigth {
+            float: right;
+            height: 30px;
+        }
+
+        /*
+        通道窗口
+        */
+        .box {
+            background-color: #e9e8e8;
+            padding: 1px;
+            color: black;
+            float: left;
+            margin-top: 2px;
+            margin-left: 2px;
+        }
+
+        .box_info {
             height: 20px;
             width: 100%;
-            color: white;
         }
 
-        .box .info .title {
+        .box_info_title {
             float: left;
+            height: 20px;
         }
 
-        .box .info .channel {
-            float: right;
+        .box_inf_toolbar {
+            float: left;
+            height: 20px;
         }
 
-        .greenborder {
-            border: 1px solid green;
+        /*
+        选中框
+        */
+        .selectedborder {
+            border: 1px solid black;
+        }
+
+        /*
+        未中框
+        */
+        .unselectedborder {
+            border: 1px solid #999999;
+        }
+
+        /*
+        * 按钮类
+        */
+        .button {
+            display: inline-block;
+            border: 1px solid #cccccc;
+            background-color: #ebebeb;
+            text-align: center;
+            width: 62px;
+            height: 24px;
+            line-height: 20px;
+            color: #333333;
+            text-decoration: none;
+        }
+
+        .button28 {
+            display: inline-block;
+            margin-top: 2px;
+            margin-left: 5px;
+            width: 28px;
+            height: 28px;
+        }
+
+        .icon {
+            display: inline-block;
+            margin-top: 2px;
+            width: 16px;
+            height: 16px;
+        }
+
+        .icon28 {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+        }
+
+        .icontitle {
+            display: inline-block;
+        }
+
+        .icon_play {
+            background: url('icon-realtime.png') no-repeat -128px -224px;
+        }
+
+        .icon_stop {
+            background: url('icon-realtime.png') no-repeat -144px -224px;
+        }
+
+        .icon_box1 {
+            background: url('icon-realtime.png') no-repeat 0 0;
+        }
+
+        .icon_box4 {
+            background: url('icon-realtime.png') no-repeat -32px 0;
+        }
+
+        .icon_box6 {
+            background: url('icon-realtime.png') no-repeat -64px 0;
+        }
+
+        .icon_box9 {
+            background: url('icon-realtime.png') no-repeat -96px 0;
+        }
+
+        .icon_box10 {
+            background: url('icon-realtime.png') no-repeat -128px 0;
+        }
+
+        .icon_box16 {
+            background: url('icon-realtime.png') no-repeat -160px 0;
+        }
+
+        .icon_box36 {
+            background: url('icon-realtime.png') no-repeat -192px 0;
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <div class="view">
+    <div class="top_tool">
+        <div class="top_tool_left">
+            <label for="">渝A123456(黄色) 共4个通道</label>
+            <a href="javascript:;" class="button">
+                <span class="icon icon_play"></span>
+                <span class="icontitle">播放</span>
+            </a>
+            <a href="javascript:;" class="button">
+                <span class="icon icon_stop"></span>
+                <span class="icontitle">停止</span>
+            </a>
         </div>
-        <div class="tool"></div>
+        <div class="top_tool_rigth">
+            <a href="javascript:;" title="1" class="button28">
+                <span class="icon28 icon_box1"></span>
+            </a>
+            <a href="javascript:;" title="4" class="button28">
+                <span class="icon28 icon_box4"></span>
+            </a>
+            <a href="javascript:;" title="6" class="button28">
+                <span class="icon28 icon_box6"></span>
+            </a>
+            <a href="javascript:;" title="9" class="button28">
+                <span class="icon28 icon_box9"></span>
+            </a>
+            <a href="javascript:;" title="10" class="button28">
+                <span class="icon28 icon_box10"></span>
+            </a>
+            <a href="javascript:;" title="16" class="button28">
+                <span class="icon28 icon_box16"></span>
+            </a>
+            <a href="javascript:;" title="36" class="button28">
+                <span class="icon28 icon_box36"></span>
+            </a>
+        </div>
+    </div>
+    <div class="view">
+
     </div>
 </body>
 <script>
@@ -119,21 +257,30 @@
 
             },
             initContainer: function () {
-                this.containerHeight = $(".container").height();
-                this.containerWidth = $(".container").width();
+                this.containerHeight = $(document).height() - 35;
+                this.containerWidth = $(document).width() - 4;
                 var that = this;
                 $(window).resize(function (e) {
-                    that.containerHeight = $(window).height();
-                    that.containerWidth = $(window).width();
+                    that.containerHeight = $(document).height() - 35;
+                    that.containerWidth = $(document).width() - 4;
                     that.resizeBox();
+                });
+                $(".view").delegate('.box', 'click', function () {
+                    $(this).siblings().removeClass('selectedborder').addClass('unselectedborder');
+                    $(this).removeClass('unselectedborder').addClass('selectedborder');
+                });
+                $(".top_tool_rigth").delegate('a', 'click', function () {
+                    var title = $(this).attr('title');
+                    app.initBox(parseInt(title));
+                    app.resizeBox();
                 });
             },
             boxTemplate: function (id) {
                 var array = [];
-                array.push('<div class="box" id="box_' + id + '">');
-                array.push('   <div class="info">');
-                array.push('        <div class="title"></div>');
-                array.push('        <div class="channel">通道:' + id + '</div>');
+                array.push('<div class="box unselectedborder" id="box_' + id + '">');
+                array.push('   <div class="box_info">');
+                array.push('        <div class="box_info_title"></div>');
+                array.push('        <div class="box_info_tool">通道:' + id + '</div>');
                 array.push('   </div>');
                 array.push('   <video id="video_' + id + '" autoplay="false"></video>');
                 array.push('</div>');
@@ -142,50 +289,83 @@
             initBox: function (boxSize) {
                 var html = [];
                 this.boxSize = boxSize;
-                for (let index = 0; index < this.boxSize; index++) {
+                for (let index = 1; index <= this.boxSize; index++) {
                     const temp = this.boxTemplate(index);
                     html.push(temp);
                 }
-                $(".container>.view").html(html.join(''));
-                this.resizeBox();
+                $(".view").html(html.join(''));
             },
             resizeBox: function () {
                 var boxWidth = 0;
                 var boxHeight = 0;
                 switch (this.boxSize) {
                     case 1:
-                        //boxWidth = this.containerWidth;
-                        //boxHeight = this.containerHeight;
-                        $("#box_0").css('width', '100%').css('height', '100%');
-                        //boxHeight = $("#box_0").width();
-                        $("#video_0").css('width', '100%')
-                        //$("#video_0").width((boxHeight - 25) * 16 / 9);
-                        break;
-                    case 2:
-                        boxWidth = this.containerWidth / 2;
-                        boxHeight = this.containerHeight;
-                        $("#box_0").height(boxHeight).width(boxWidth);
-                        $("#video_0").width(boxWidth);
+                        boxWidth = (this.containerWidth - 6);
+                        boxHeight = (this.containerHeight - 6);
                         $("#box_1").height(boxHeight).width(boxWidth);
-                        $("#video_1").width(boxWidth);
+                        $("#video_1").height(boxHeight - 20).width(boxWidth);
                         break;
-                    case 3:
-                        boxWidth = this.containerWidth / 2;
-                        boxHeight = this.containerHeight / 2;
-                        $("#box_0").height(boxHeight * 2).width(boxWidth);
-                        $("#video_0").width(boxWidth);
-                        $("#box_1").height(boxHeight).width(boxWidth);
-                        $("#video_1").width(boxWidth);
-                        $("#box_2").height(boxHeight).width(boxWidth);
-                        $("#video_2").width(boxWidth);
+                    case 4:
+                        boxWidth = (this.containerWidth - 10) / 2;
+                        boxHeight = (this.containerHeight - 10) / 2;
+                        for (let index = 1; index <= 4; index++) {
+                            $("#box_" + index).height(boxHeight).width(boxWidth);
+                            $("#video_" + index).height(boxHeight - 20).width(boxWidth);
+                        }
                         break;
-                    case 4: break;
+                    case 6:
+                        boxWidth = (this.containerWidth - 16) / 3;
+                        boxHeight = (this.containerHeight - 16) / 3;
+                        $("#box_1").height(boxHeight * 2 + 6).width(boxWidth * 2 + 6);
+                        $("#video_1").height(boxHeight * 2 + 6 - 20).width(boxWidth * 2 + 6);
+                        for (let index = 2; index <= 6; index++) {
+                            $("#box_" + index).height(boxHeight).width(boxWidth);
+                            $("#video_" + index).height(boxHeight - 20).width(boxWidth);
+                        }
+                        break;
+                    case 9:
+                        boxWidth = (this.containerWidth - 16) / 3;
+                        boxHeight = (this.containerHeight - 16) / 3;
+                        for (let index = 1; index <= 9; index++) {
+                            $("#box_" + index).height(boxHeight).width(boxWidth);
+                            $("#video_" + index).height(boxHeight - 20).width(boxWidth);
+                        }
+                        break;
+                    case 10:
+                        boxWidth = (this.containerWidth - 22) / 4;
+                        boxHeight = (this.containerHeight - 22) / 4;
+                        for (let index = 1; index <= 2; index++) {
+                            $("#box_" + index).height(boxHeight * 2 + 6).width(boxWidth * 2 + 6);
+                            $("#video_" + index).height(boxHeight * 2 + 6 - 20).width(boxWidth * 2 + 6);
+                        }
+                        for (let index = 3; index <= 10; index++) {
+                            $("#box_" + index).height(boxHeight).width(boxWidth);
+                            $("#video_" + index).height(boxHeight - 20).width(boxWidth);
+                        }
+                        break;
+                    case 16:
+                        boxWidth = (this.containerWidth - 22) / 4;
+                        boxHeight = (this.containerHeight - 22) / 4;
+                        for (let index = 1; index <= 16; index++) {
+                            $("#box_" + index).height(boxHeight).width(boxWidth);
+                            $("#video_" + index).height(boxHeight - 20).width(boxWidth);
+                        }
+                        break;
+                    case 36:
+                        boxWidth = (this.containerWidth - 34) / 6;
+                        boxHeight = (this.containerHeight - 34) / 6;
+                        //boxWidth=Math.floor(boxWidth);
+                        for (let index = 1; index <= 36; index++) {
+                            $("#box_" + index).height(boxHeight).width(boxWidth);
+                            $("#video_" + index).height(boxHeight - 20).width(boxWidth);
+                        }
+                        break;
                     default:
                         break;
                 }
             },
             initPlayer: function () {
-                for (let index = 0; index < this.boxSize; index++) {
+                for (let index = 1; index <= this.boxSize; index++) {
                     var tempVideo = video;
                     tempVideo.init("video_" + index, "http://106.12.124.219:8000/iptv/hks.flv");
                     tempVideo.play();
@@ -201,7 +381,8 @@
         };
         $(function () {
             app.initContainer();
-            app.initBox(1);
+            app.initBox(4);
+            app.resizeBox();
             app.initPlayer();
         });
         window.app = app;
