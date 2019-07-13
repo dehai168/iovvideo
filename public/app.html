@@ -69,16 +69,20 @@
             height: 20px;
         }
 
-        .box_inf_toolbar {
-            float: left;
+        .box_info_toolbar {
+            float: right;
             height: 20px;
+        }
+
+        .box video {
+            object-fit: fill;
         }
 
         /*
         选中框
         */
         .selectedborder {
-            border: 1px solid black;
+            border: 1px solid red;
         }
 
         /*
@@ -170,11 +174,11 @@
     <div class="top_tool">
         <div class="top_tool_left">
             <label for="">渝A123456(黄色) 共4个通道</label>
-            <a href="javascript:;" class="button">
+            <a href="javascript:;" class="button" do="play">
                 <span class="icon icon_play"></span>
                 <span class="icontitle">播放</span>
             </a>
-            <a href="javascript:;" class="button">
+            <a href="javascript:;" class="button" do="stop">
                 <span class="icon icon_stop"></span>
                 <span class="icontitle">停止</span>
             </a>
@@ -209,50 +213,87 @@
 </body>
 <script>
     (function ($, window) {
-        var video = {
-            player: null,
-            test: function () {
+        function video(domid, url) {
+            var obj = new Object();
+            obj.domid = domid;
+            obj.url = url;
+            obj.player = null;
+            obj.loadCompleteCallback = null;
+            obj.errorCallback = null;
+            obj.staticinfoCallback = null;
+            obj.test = function () {
                 return flvjs ? flvjs.isSupported() : false;
-            },
-            init: function (domid, url) {
-                var videoElement = document.getElementById(domid);
+            };
+            obj.init = function () {
                 var flvPlayer = flvjs.createPlayer({
                     type: 'flv',
                     isLive: true,
-                    url: url,
+                    url: obj.url,
                 });
-                flvPlayer.attachMediaElement(videoElement);
                 flvPlayer.on(flvjs.Events.ERROR, function (e) {
+                    if (obj.errorCallback !== null) {
+                        obj.errorCallback(e);
+                    }
+                });
+                flvPlayer.on(flvjs.Events.LOADING_COMPLETE, function (e) {
+                    if (obj.loadCompleteCallback !== null) {
+                        obj.loadCompleteCallback(e);
+                    }
+                });
+                flvPlayer.on(flvjs.Events.MEDIA_INFO, function (e) {
                     console.log(e);
                 });
+                flvPlayer.on(flvjs.Events.STATISTICS_INFO, function (e) {
+                    if (obj.staticinfoCallback !== null) {
+                        obj.staticinfoCallback(e);
+                    }
+                });
                 this.player = flvPlayer;
-            },
-            play: function () {
+            };
+            obj.attach = function () {
+                var videoElement = document.getElementById(obj.domid);
+                if (this.player) {
+                    this.player.attachMediaElement(videoElement);
+                }
+            };
+            obj.load = function () {
                 if (this.player) {
                     this.player.load();
+                }
+            };
+            obj.play = function () {
+                if (this.player) {
                     this.player.play();
                 }
-            },
-            pause: function () {
+            };
+            obj.pause = function () {
                 if (this.player) {
                     this.player.pause();
                 }
-            },
-
-            destory: function () {
+            };
+            obj.stop = function () {
+                if (this.player) {
+                    this.player.pause();
+                    this.player.unload();
+                    this.player.detachMediaElement();
+                }
+            };
+            obj.destroy = function () {
                 if (this.player) {
                     this.player.unload();
                     this.player.detachMediaElement();
                     this.player.destroy();
-                    this.player = null;
                 }
-            }
+            };
+            return obj;
         };
         var app = {
             containerHeight: 0,
             containerWidth: 0,
+            license: "",
             playerList: [],
             boxSize: 0,
+            selectedIndex: 0,
             getQueryString: function () {
 
             },
@@ -265,35 +306,93 @@
                     that.containerWidth = $(document).width() - 4;
                     that.resizeBox();
                 });
+                //单选框
                 $(".view").delegate('.box', 'click', function () {
                     $(this).siblings().removeClass('selectedborder').addClass('unselectedborder');
                     $(this).removeClass('unselectedborder').addClass('selectedborder');
+                    //标记当前选择 
+                    app.selectedIndex = parseInt($(this).attr('id').split('_')[1]);
                 });
+                //双击放大或缩小
+                $(".view").delegate('.box', 'dblclick', function () {
+                    var zoomAttr = $(this).attr('zoom');
+                    if (zoomAttr === undefined || zoomAttr === "min") {
+                        $(this).attr('zoom', 'max');
+                        app.maxBox(app.selectedIndex);
+                    } else {
+                        $(this).attr('zoom', 'min');
+                        app.initBox(app.boxSize);
+                        app.resizeBox();
+                    }
+                });
+                //屏蔽右键
+                $(".view").bind("contextmenu", function (e) {
+                    return false;
+                });
+                //窗口布局切换
                 $(".top_tool_rigth").delegate('a', 'click', function () {
                     var title = $(this).attr('title');
                     app.initBox(parseInt(title));
                     app.resizeBox();
                 });
+                //视频控制按钮
+                $(".top_tool_left").delegate('a', 'click', function () {
+                    var action = $(this).attr('do');
+                    switch (action) {
+                        case "play":
+                            app.startPlay();
+                            break;
+                        case "stop":
+                            app.stopPlay();
+                            break;
+                        default:
+                            break;
+                    }
+                });
             },
             boxTemplate: function (id) {
                 var array = [];
+                var channel = id <= app.boxSize ? "_" + id : "";
                 array.push('<div class="box unselectedborder" id="box_' + id + '">');
                 array.push('   <div class="box_info">');
-                array.push('        <div class="box_info_title"></div>');
-                array.push('        <div class="box_info_tool">通道:' + id + '</div>');
+                array.push('        <div class="box_info_title">');
+                array.push('            <span class="box_info_title_index">' + id + '</span>');
+                array.push('            <span class="box_info_title_license">' + app.license + channel + '</span>&nbsp;&nbsp;&nbsp;');
+                array.push('            <span class="box_info_title_speed"></span>');
+                array.push('        </div>');
+                array.push('        <div class="box_info_toolbar">x</div>');
                 array.push('   </div>');
-                array.push('   <video id="video_' + id + '" autoplay="false"></video>');
+                array.push('   <video id="video_' + id + '" autoplay muted poster="poster.jpg"></video>');
                 array.push('</div>');
                 return array.join(' ');
             },
             initBox: function (boxSize) {
-                var html = [];
                 this.boxSize = boxSize;
-                for (let index = 1; index <= this.boxSize; index++) {
-                    const temp = this.boxTemplate(index);
-                    html.push(temp);
+                var childrenCount = $(".view").children('div').length;
+                if (childrenCount <= boxSize) {//增加+显示
+                    for (let index = 1; index <= boxSize; index++) {
+                        $("#box_" + index).show();
+                    }
+                    var html = [];
+                    for (let index = (childrenCount + 1); index <= boxSize; index++) {
+                        const temp = this.boxTemplate(index);
+                        html.push(temp);
+                    }
+                    $(".view").append(html.join(''));
+                } else { //隐藏
+                    for (let index = 1; index <= boxSize; index++) {
+                        $("#box_" + index).show();
+                    }
+                    for (let index = (boxSize + 1); index <= childrenCount; index++) {
+                        $("#box_" + index).hide();
+                    }
                 }
-                $(".view").html(html.join(''));
+            },
+            maxBox: function (selectedIndex) {
+                var boxWidth = (this.containerWidth - 6);
+                var boxHeight = (this.containerHeight - 6);
+                $("#box_" + selectedIndex).height(boxHeight).width(boxWidth).siblings().hide();
+                $("#video_" + selectedIndex).height(boxHeight - 20).width(boxWidth);
             },
             resizeBox: function () {
                 var boxWidth = 0;
@@ -354,7 +453,6 @@
                     case 36:
                         boxWidth = (this.containerWidth - 34) / 6;
                         boxHeight = (this.containerHeight - 34) / 6;
-                        //boxWidth=Math.floor(boxWidth);
                         for (let index = 1; index <= 36; index++) {
                             $("#box_" + index).height(boxHeight).width(boxWidth);
                             $("#video_" + index).height(boxHeight - 20).width(boxWidth);
@@ -365,25 +463,50 @@
                 }
             },
             initPlayer: function () {
-                for (let index = 1; index <= this.boxSize; index++) {
-                    var tempVideo = video;
-                    tempVideo.init("video_" + index, "http://106.12.124.219:8000/iptv/hks.flv");
-                    tempVideo.play();
+                for (let channel = 1; channel <= app.channel; channel++) {
+                    var tempVideo = video("video_" + channel, "http://106.12.124.219:8000/mv/dq.flv");
+                    tempVideo.init();
                     this.playerList.push(tempVideo);
                 }
             },
-            destory: function () {
+            startPlay: function () {
                 for (let index = 0; index < this.playerList.length; index++) {
-                    const element = this.playerList[index];
-                    element.destory();
+                    const channel = index + 1;
+                    const video = this.playerList[index];
+                    (function (channel, video) {
+                        video.loadCompleteCallback = function (e) {
+                            onsole.log('complete');
+                        };
+                        video.errorCallback = function (error) {
+                            console.log(error);
+                        };
+                        video.staticinfoCallback = function (info) {
+                            $("#box_" + channel + ">.box_info>.box_info_title>.box_info_title_speed").text(info.speed.toFixed(2) + 'kb/s');
+                        };
+                        video.attach();
+                        video.load();
+                        video.play();
+                    })(channel, video);
                 }
             },
+            stopPlay: function () {
+                for (let index = 0; index < this.playerList.length; index++) {
+                    const channel = index + 1;
+                    const video = this.playerList[index];
+                    (function (channel, video) {
+                        video.stop();
+                    })(channel, video);
+                }
+            }
         };
         $(function () {
+            app.license = "渝A123456";
+            app.channel = 4;
             app.initContainer();
-            app.initBox(4);
+            app.initBox(app.channel);
             app.resizeBox();
             app.initPlayer();
+            app.startPlay();
         });
         window.app = app;
     })($, window);
