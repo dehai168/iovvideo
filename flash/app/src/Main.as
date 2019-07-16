@@ -11,6 +11,11 @@ package
 	 */
 	public class Main extends Sprite 
 	{
+		private var _layoutWidth:int = 0;  //场景宽
+		private var _layoutHeight:int = 0; //场景高
+		private var _boxSize:int = 4;      //布局盒子数量
+		private var _channelCount:int = 2; //通道个数
+		private var _selectedIndex:int = 0;//当前选择项
 		
 		public function Main() 
 		{
@@ -20,11 +25,29 @@ package
 		
 		private function init(e:Event = null):void 
 		{
-			var myText:TextField = new TextField();
-			myText.text = "fuck";
-			this.stage.addChild(myText);
+			this.stage.align = StageAlign.TOP_LEFT;
+			this.stage.scaleMode = StageScaleMode.NO_SCALE;
+			
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
+			
+			
+			this.addEventListener(Event.RESIZE, layoutResize);
+			var myText:TextField = new TextField();
+			myText.x = 0;
+			myText.y = 0;
+			myText.backgroundColor = 0x333333;
+			myText.textColor = 0x999999;
+			myText.text = "fuck";
+			this.stage.addChild(myText);
+		}
+		/**
+		 * 重新调整布局
+		 * @param	e
+		 */
+		private function layoutResize(e:Event):void 
+		{
+			
 		}
 		
 	}
