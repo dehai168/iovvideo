@@ -12,7 +12,7 @@
     <movie minorVersion="1" />
     <movie platform="Flash Player" />
     <movie background="#FFFFFF" />
-    <movie preferredSDK="D:\04-软件安装\flex_sdk_4.6\bin" />
+    <movie preferredSDK="D:\flex_sdk_4.6\bin" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>

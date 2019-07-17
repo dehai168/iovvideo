@@ -57,7 +57,7 @@ package
 			this._layoutWidth = this.stage.width;
 			this._layoutHeight = this.stage.height;
 			
-			
+			this.initBox();
 			switch(boxSize)
 			{
 				case 1:this.layout1();
@@ -74,13 +74,13 @@ package
 			{
 				for (var j:int = 1; j <= this._boxSize; j++) 
 				{
-					var box:Sprite = this.stage.getChildByName("box_" + j) as Sprite;
-					box.visible = true;
+					var box1:Sprite = this.stage.getChildByName("box_" + j) as Sprite;
+					box1.visible = true;
 				}
 				for (var k:int = (this._boxSize+1); k <= existBoxCount; k++) 
 				{
-					var box:Sprite = this.stage.getChildByName("box_" + k) as Sprite;
-					box.visible = false;
+					var box2:Sprite = this.stage.getChildByName("box_" + k) as Sprite;
+					box2.visible = false;
 				}
 			}
 			else 
@@ -92,12 +92,15 @@ package
 					//外框
 					var boxBorder:Shape = new Shape();
 					boxBorder.name = "boxBorder_" + i;
-					//TODO
-					
+					box.addChild(boxBorder);
+					//视频遮罩图片
+					var poster:Bitmap = new poster();
+					poster.name = "boxPoster_" + i;
+					box.addChild(poster);
 					
 					//信息部分
 					var boxIndex:TextField = new TextField();
-					boxIndex.text = i;
+					boxIndex.text = i + "";
 					boxIndex.name = "boxIndex_" + boxIndex.text;
 					box.addChild(boxIndex);
 					var boxTitle:TextField = new TextField();
@@ -164,6 +167,24 @@ package
 						//TODO
 					});
 					box.addChild(soundButton);
+					//播放画面按钮
+					var playButton:SimpleButton = new SimpleButton();
+					var bigplayIconBitmap:Bitmap = new bigplayIcon();
+					playButton.width = 58;
+					playButton.height = 58;
+					playButton.upState = bigplayIconBitmap;
+					playButton.downState = bigplayIconBitmap;
+					playButton.visible = false;
+					playButton.name = "soundbutton_" + boxIndex.text;
+					playButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
+					{
+						var clickButton:SimpleButton = e.currentTarget as SimpleButton;
+						var name:String = clickButton.name;
+						var index:String = name.split('_')[1];
+						
+						//TODO
+					});
+					box.addChild(playButton);
 					
 					this.stage.addChild(box);
 				}	
@@ -185,7 +206,6 @@ package
 		{
 			this.layout(this._boxSize);
 		}
-		
 	}
 	
 }
