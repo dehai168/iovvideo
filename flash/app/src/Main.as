@@ -4,6 +4,7 @@ package
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.display.*;
+	import flash.media.Video;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
@@ -51,15 +52,15 @@ package
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
 			
-			this.jscallreg();
 			this.layout(4);
 			this.stage.addEventListener(Event.RESIZE, layoutResizeEvent);
+			this.jscallreg();
 		}
 		/**
 		 * 布局
 		 * @param	boxSize
 		 */
-		private function layout(boxSize:int):void
+		public function layout(boxSize:int):void
 		{
 			this._boxSize = boxSize;
 			this._layoutWidth = this.stage.stageWidth;
@@ -116,6 +117,12 @@ package
 					boxBorder.graphics.drawRect(0, 0, 10, 10);
 					boxBorder.graphics.endFill();
 					this.stage.addChild(boxBorder);
+					
+					//视频
+					var video:Video = new Video();
+					video.name = "boxVideo_" + i;
+					video.smoothing = true;
+					this.stage.addChild(video);
 					
 					//视频遮罩图片
 					var poster:Bitmap = new poster();
@@ -237,6 +244,7 @@ package
 		private function layoutVisable(i:int,flag:Boolean):void
 		{
 			var boxBorder:Shape = this.stage.getChildByName("boxBorder_" + i) as Shape;
+			var boxVideo:Video = this.stage.getChildByName("boxVideo_" + i) as Video;
 			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
 			var boxIndex:TextField = this.stage.getChildByName("boxIndex_" + i) as TextField;
 			var boxTitle:TextField = this.stage.getChildByName("boxTitle_" + i) as TextField;
@@ -248,6 +256,7 @@ package
 			var playButton:SimpleButton = this.stage.getChildByName("playbutton_" + i) as SimpleButton;
 			
 			boxBorder.visible = flag;
+			boxVideo.visible = flag;
 			poster.visible = flag;
 			boxIndex.visible = flag;
 			boxTitle.visible = flag;
@@ -269,6 +278,7 @@ package
 		private function layoutFactory(i:int,x:int,y:int,boxWidth:int,boxHeight:int):void
 		{
 			var boxBorder:Shape = this.stage.getChildByName("boxBorder_" + i) as Shape;
+			var boxVideo:Video = this.stage.getChildByName("boxVideo_" + i) as Video;
 			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
 			var boxIndex:TextField = this.stage.getChildByName("boxIndex_" + i) as TextField;
 			var boxTitle:TextField = this.stage.getChildByName("boxTitle_" + i) as TextField;
@@ -287,6 +297,10 @@ package
 			boxBorder.y = y;
 			boxBorder.width = boxWidth;
 			boxBorder.height = boxHeight;
+			boxVideo.x = x + 1;
+			boxVideo.y = y + topHeight;
+			boxVideo.width = boxWidth - 2;
+			boxVideo.height = boxHeight - topHeight - 1;
 			poster.x = x + 1;
 			poster.y = y + topHeight;
 			poster.width = boxWidth - 2;
@@ -583,8 +597,24 @@ package
 		{
 			if (ExternalInterface.available)
 			{
-				ExternalInterface.addCallback('layout', layout);
+				try 
+				{
+					ExternalInterface.addCallback('layout', layout);
+				}
+				catch (err:Error)
+				{
+					jsConsole(err.message);
+				}
+				
 			}
+		}
+		/**
+		 * js打印
+		 * @param	error
+		 */
+		private function jsConsole(error:String):void 
+		{
+			this.calljs('console.log', error);
 		}
 	}
 	
