@@ -3,11 +3,13 @@ package
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
+	import flash.events.NetStatusEvent;
 	import flash.display.*;
 	import flash.text.TextField;
 	import flash.text.TextFormat;
 	import flash.text.TextFormatAlign;
 	import flash.external.ExternalInterface;
+	import flash.net.*;
 	
 	/**
 	 * ...
@@ -50,16 +52,16 @@ package
 			
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
-			
-			this.jscallreg();
+		
 			this.layout(4);
 			this.stage.addEventListener(Event.RESIZE, layoutResizeEvent);
+			this.jscallreg();
 		}
 		/**
 		 * 布局
 		 * @param	boxSize
 		 */
-		private function layout(boxSize:int):void
+		public function layout(boxSize:int):void
 		{
 			this._boxSize = boxSize;
 			this._layoutWidth = this.stage.stageWidth;
@@ -94,14 +96,10 @@ package
 			{
 				for (var j:int = 1; j <= this._boxSize; j++) 
 				{
-					//var box1:Sprite = this.stage.getChildByName("box_" + j) as Sprite;
-					//box1.visible = true;
 					this.layoutVisable(j, true);
 				}
 				for (var k:int = (this._boxSize+1); k <= this._boxTotal; k++) 
 				{
-					//var box2:Sprite = this.stage.getChildByName("box_" + k) as Sprite;
-					//box2.visible = false;
 					this.layoutVisable(k, false);
 				}
 			}
@@ -117,6 +115,31 @@ package
 					boxBorder.graphics.endFill();
 					this.stage.addChild(boxBorder);
 					
+					//视频
+					var boxVideo:BoxVideo = new BoxVideo(i+"");
+					boxVideo.name = "boxVideo_" + i;
+					boxVideo.addEventListener(BoxVideoEvent.INFO,function (event:BoxVideoEvent):void 
+					{
+						var boxSpeed:TextField = stage.getChildByName("boxSpeed_" + event.index) as TextField;
+						switch (event.key) 
+						{
+							case "speed":
+								boxSpeed.text = event.value + "kb/s";
+							break;
+							default:
+						}
+					});
+					boxVideo.addEventListener(BoxVideoEvent.ERROR,function (event:BoxVideoEvent):void 
+					{
+						var boxError:TextField = stage.getChildByName("boxError_" + event.index) as TextField;
+						boxError.text = event.content;
+					});
+					boxVideo.addEventListener(MouseEvent.CLICK,function (event:MouseEvent):void 
+					{
+						jsConsole('click');
+					});
+					this.stage.addChild(boxVideo);
+					
 					//视频遮罩图片
 					var poster:Bitmap = new poster();
 					poster.name = "boxPoster_" + i;
@@ -127,6 +150,7 @@ package
 					var boxIndex:TextField = new TextField();
 					var boxIndexText:TextFormat = new TextFormat();
 					boxIndexText.size = 12;
+					boxIndex.height = 20;
 					boxIndex.defaultTextFormat = boxIndexText;
 					boxIndex.text = i + "";
 					boxIndex.name = "boxIndex_" + boxIndex.text;
@@ -135,6 +159,7 @@ package
 					var boxTitle:TextField = new TextField();
 					var boxTitleText:TextFormat = new TextFormat();
 					boxTitleText.size = 12;
+					boxTitle.height = 20;
 					boxTitle.defaultTextFormat = boxTitleText;
 					boxTitle.text = this._license;
 					boxTitle.width = 180;
@@ -144,17 +169,19 @@ package
 					var boxSpeed:TextField = new TextField();
 					var boxSpeedText:TextFormat = new TextFormat();
 					boxSpeedText.size = 12;
+					boxSpeed.height = 20;
 					boxSpeed.defaultTextFormat = boxSpeedText;
-					boxSpeed.text = "200kb/s";
+					boxSpeed.text = "";
 					boxSpeed.name = "boxSpeed_" + boxIndex.text;
 					this.stage.addChild(boxSpeed);
 					
 					var boxError:TextField = new TextField();
 					var boxErrorText:TextFormat = new TextFormat();
 					boxErrorText.size = 12;
+					boxError.height = 20;
 					boxErrorText.color = 0xFF0000;
 					boxError.defaultTextFormat = boxErrorText;
-					boxError.text = "NetworkError";
+					boxError.text = "";
 					boxError.name = "boxError_" + boxIndex.text;
 					this.stage.addChild(boxError);
 					/*按钮部分*/
@@ -167,6 +194,14 @@ package
 					stopButton.useHandCursor = true;
 					stopButton.visible = true;
 					stopButton.name = "stopbutton_" + boxIndex.text;
+					stopButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
+					{
+						var clickButton:SimpleButton = e.currentTarget as SimpleButton;
+						var name:String = clickButton.name;
+						var index:String = name.split('_')[1];
+						
+						videoStop(index);
+					});
 					this.stage.addChild(stopButton);
 					//静音按钮
 					var muteIconBitmap:Bitmap = new muteIcon();
@@ -185,7 +220,7 @@ package
 						var temp:SimpleButton = stage.getChildByName('soundbutton_' + index) as SimpleButton;
 						temp.visible = true;
 						
-						//TODO
+						videoSound(index);
 					});
 					this.stage.addChild(muteButton);
 					//播放声音按钮
@@ -205,7 +240,7 @@ package
 						var temp:SimpleButton = stage.getChildByName('mutebutton_' + index) as SimpleButton;
 						temp.visible = true;
 						
-						//TODO
+						videoMute(index);
 					});
 					this.stage.addChild(soundButton);
 					//播放画面按钮
@@ -221,13 +256,67 @@ package
 						var name:String = clickButton.name;
 						var index:String = name.split('_')[1];
 						
-						//TODO
+						videoPlay(index);
 					});
 					this.stage.addChild(playButton);
 					
 					this._boxTotal++;
 				}	
 			}
+		}
+		/**
+		 * 视频播放
+		 * @param	i
+		 */
+		private function videoPlay(i:String):void
+		{
+			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
+			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
+			var playButton:SimpleButton = this.stage.getChildByName("playbutton_" + i) as SimpleButton;
+			
+			boxVideo.setMediaUrl("rtmp://202.69.69.180:443/webcast/");
+			boxVideo.play();
+			
+			poster.visible = false;
+			playButton.visible = false;
+		}
+		/**
+		 * 视频停止
+		 * @param	i
+		 */
+		private function videoStop(i:String):void 
+		{
+			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
+			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
+			var playButton:SimpleButton = this.stage.getChildByName("playbutton_" + i) as SimpleButton;
+			var boxSpeed:TextField = this.stage.getChildByName("boxSpeed_" + i) as TextField;
+			var boxError:TextField = this.stage.getChildByName("boxError_" + i) as TextField;
+			
+			boxVideo.stop();
+			
+			boxSpeed.text = "";
+			boxError.text = "";
+			
+			poster.visible = true;
+			playButton.visible = true;
+		}
+		/**
+		 * 视频放声
+		 */
+		private function videoSound(i:String):void 
+		{
+			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
+			
+			boxVideo.sound();
+		}
+		/**
+		 * 视频静音
+		 */
+		private function videoMute(i:String):void 
+		{
+			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
+			
+			boxVideo.mute();
 		}
 		/**
 		 * 布局显示和隐藏
@@ -237,6 +326,7 @@ package
 		private function layoutVisable(i:int,flag:Boolean):void
 		{
 			var boxBorder:Shape = this.stage.getChildByName("boxBorder_" + i) as Shape;
+			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
 			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
 			var boxIndex:TextField = this.stage.getChildByName("boxIndex_" + i) as TextField;
 			var boxTitle:TextField = this.stage.getChildByName("boxTitle_" + i) as TextField;
@@ -248,7 +338,6 @@ package
 			var playButton:SimpleButton = this.stage.getChildByName("playbutton_" + i) as SimpleButton;
 			
 			boxBorder.visible = flag;
-			poster.visible = flag;
 			boxIndex.visible = flag;
 			boxTitle.visible = flag;
 			boxSpeed.visible = flag;
@@ -256,7 +345,26 @@ package
 			stopButton.visible = flag;
 			muteButton.visible = flag;
 			soundButton.visible = flag;
-			playButton.visible = flag;
+			
+			if (!boxVideo.isplay) //没有播放
+			{
+				boxVideo.visible = flag;
+				poster.visible = flag;
+				playButton.visible = flag;
+			}
+			else //播放
+			{
+				if (flag){ //显示
+					boxVideo.resume();
+					boxVideo.visible = true;
+					
+				}else{ //隐藏
+					boxVideo.pause();
+					boxVideo.visible = false;
+				}
+				poster.visible = false;
+				playButton.visible = false;
+			}
 		}
 		/**
 		 * 布局适配工厂
@@ -269,6 +377,7 @@ package
 		private function layoutFactory(i:int,x:int,y:int,boxWidth:int,boxHeight:int):void
 		{
 			var boxBorder:Shape = this.stage.getChildByName("boxBorder_" + i) as Shape;
+			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
 			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
 			var boxIndex:TextField = this.stage.getChildByName("boxIndex_" + i) as TextField;
 			var boxTitle:TextField = this.stage.getChildByName("boxTitle_" + i) as TextField;
@@ -287,6 +396,11 @@ package
 			boxBorder.y = y;
 			boxBorder.width = boxWidth;
 			boxBorder.height = boxHeight;
+			boxVideo.x = x + 1;
+			boxVideo.y = y + topHeight;
+			boxVideo.width = boxWidth - 2;
+			boxVideo.height = boxHeight - topHeight - 1;
+			
 			poster.x = x + 1;
 			poster.y = y + topHeight;
 			poster.width = boxWidth - 2;
@@ -583,9 +697,32 @@ package
 		{
 			if (ExternalInterface.available)
 			{
-				ExternalInterface.addCallback('layout', layout);
+				try 
+				{
+					ExternalInterface.addCallback('layout', layout);
+				}
+				catch (err:Error)
+				{
+					jsConsole(err.message);
+				}
+				
 			}
 		}
+		/**
+		 * js打印
+		 * @param	error
+		 */
+		private function jsConsole(error:String):void 
+		{
+			this.calljs('console.log', error);
+		}
 	}
-	
+}
+class CustomClient {
+	public function onMetaData(info:Object):void {
+		trace("metadata: duration=" + info.duration + " width=" + info.width + " height=" + info.height + " framerate=" + info.framerate);
+	}
+	public function onCuePoint(info:Object):void {
+		trace("cuepoint: time=" + info.time + " name=" + info.name + " type=" + info.type);
+	}
 }
