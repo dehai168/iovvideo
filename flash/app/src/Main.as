@@ -135,10 +135,7 @@ package
 						var boxError:TextField = stage.getChildByName("boxError_" + event.index) as TextField;
 						boxError.text = event.content;
 					});
-					boxVideo.addEventListener(MouseEvent.CLICK,function (event:MouseEvent):void 
-					{
-						jsConsole('click');
-					});
+					
 					this.stage.addChild(boxVideo);
 					
 					//视频遮罩图片
@@ -146,6 +143,10 @@ package
 					poster.name = "boxPoster_" + i;
 					poster.smoothing = true;
 					this.stage.addChild(poster);
+					poster.addEventListener(MouseEvent.CLICK,function (event:MouseEvent):void 
+					{
+						jsConsole('click fuck');
+					});
 					
 					//信息部分
 					var boxIndex:TextField = new TextField();
@@ -406,6 +407,7 @@ package
 			poster.y = y + topHeight;
 			poster.width = boxWidth - 2;
 			poster.height = boxHeight - topHeight - 1;
+			
 			boxIndex.x = x;
 			boxIndex.y = y;
 			boxTitle.x = x + boxIndex.textWidth;
@@ -498,19 +500,19 @@ package
 						break;
 					case 4:
 						x = 2;
-						y = boxHeight * 2 + 7;
+						y = boxHeight * 2 + 6;
 						maxWidth = boxWidth;
 						maxHeight = boxHeight;
 						break;
 					case 5:
 						x = boxWidth + 4;
-						y = boxHeight * 2 + 7;
+						y = boxHeight * 2 + 6;
 						maxWidth = boxWidth;
 						maxHeight = boxHeight;
 						break;
 					case 6:
 						x = boxWidth * 2 + 6;
-						y = boxHeight * 2 + 7;
+						y = boxHeight * 2 + 6;
 						maxWidth = boxWidth;
 						maxHeight = boxHeight;
 						break;
@@ -629,6 +631,9 @@ package
 				this.layoutFactory(index, x, y, maxWidth, maxHeight);
 			}
 		}
+		/**
+		 * 16路布局
+		 */
 		private function layout16():void 
 		{
 			var boxWidth:int = (this._layoutWidth - 10) / 4;
@@ -649,6 +654,9 @@ package
 				}
 			}
 		}
+		/**
+		 * 36路布局
+		 */
 		private function layout36():void 
 		{
 			var boxWidth:int = (this._layoutWidth - 14) / 6;
@@ -717,13 +725,5 @@ package
 		{
 			this.calljs('console.log', error);
 		}
-	}
-}
-class CustomClient {
-	public function onMetaData(info:Object):void {
-		trace("metadata: duration=" + info.duration + " width=" + info.width + " height=" + info.height + " framerate=" + info.framerate);
-	}
-	public function onCuePoint(info:Object):void {
-		trace("cuepoint: time=" + info.time + " name=" + info.name + " type=" + info.type);
 	}
 }
