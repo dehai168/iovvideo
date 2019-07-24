@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="utf-8"/>
+	<meta charset="utf-8" />
 	<title>app</title>
 	<meta name="description" content="" />
-	
+
 	<script src="js/swfobject.js"></script>
 	<script>
 		var flashvars = {
@@ -18,37 +19,114 @@
 			wmode: "direct" // can cause issues with FP settings & webcam
 		};
 		var attributes = {
-			id:"app"
+			id: "app"
 		};
 		swfobject.embedSWF(
-			"app.swf", 
-			"altContent", "800", "600", "10.0.0", 
-			"expressInstall.swf", 
+			"app.swf",
+			"altContent", "800", "600", "10.0.0",
+			"expressInstall.swf",
 			flashvars, params, attributes);
-		function layout(parm){
-			var flash=swfobject.getObjectById('app');
-			var test=flash.layout(parm);
+		function layout(parm) {
+			var flash = swfobject.getObjectById('app');
+			var test = flash.layout(parm);
+		}
+		function openVideo() {
+			var channel = document.getElementById("inp_openchannel").value;
+			var channelArray = channel.split(',');
+			var media809url = document.getElementById('inp_media809url').value;
+			var server = document.getElementById('inp_mediaserver').value;
+			var urlConv = function (url, channel) {
+				var temp = url.split('/');
+				var temp1 = temp[3].split('.');
+				temp1[2] = channel;
+				temp[3] = temp1.join('.');
+
+				return temp.join('/');
+			};
+			var getLicense = function (url) {
+				var temp = url.split('/');
+				var temp1 = temp[3].split('.');
+				return decodeURIComponent(temp1[0]);
+			};
+			var getPlateColor = function (url) {
+				var temp = url.split('/');
+				var temp1 = temp[3].split('.');
+				var color = parseInt(temp1[1]);
+				var text = "蓝色";
+				switch (color) {
+					case 1:
+						text = "蓝色";
+						break;
+					case 2:
+						text = '黄色';
+						break;
+					case 3:
+						text = '黑色';
+						break;
+					case 4:
+						text = '白色';
+						break;
+					case 5:
+						text = '绿色';
+						break;
+					case 9:
+						text = '其他';
+						break;
+					default:
+						text = '-';
+						break;
+				}
+				return text;
+			};
+			var license = getLicense(media809url);
+			var plateColor = getPlateColor(media809url);
+			//var rtmpUrl = "rtmp://" + server + "/app/publish";
+			channelArray.forEach(element => {
+				console.log(license + '_' + element + '(' + plateColor + ')-' + server + '-' + urlConv(media809url, element));
+			});
+		}
+		function playAll() {
+
+		}
+		function stopAll() {
+
 		}
 	</script>
 	<style>
-		html, body { height:100%; overflow:hidden; }
-		body { margin:0; }
-		
+		html,
+		body {
+			height: 100%;
+			overflow: hidden;
+		}
+
+		body {
+			margin: 0;
+		}
 	</style>
 </head>
+
 <body>
 	<div id="altContent" style="width:800px;height:600px;">
 		<h1>app</h1>
 		<p><a href="http://www.adobe.com/go/getflashplayer">Get Adobe Flash player</a></p>
 	</div>
 	<div>
-		<button	onclick="layout(1)">1路</button>
-		<button	onclick="layout(4)">4路</button>
-		<button	onclick="layout(6)">6路</button>
-		<button	onclick="layout(9)">9路</button>
-		<button	onclick="layout(10)">10路</button>
-		<button	onclick="layout(16)">16路</button>
-		<button	onclick="layout(36)">36路</button>
+		<button onclick="layout(1)">1路</button>
+		<button onclick="layout(4)">4路</button>
+		<button onclick="layout(6)">6路</button>
+		<button onclick="layout(9)">9路</button>
+		<button onclick="layout(10)">10路</button>
+		<button onclick="layout(16)">16路</button>
+		<button onclick="layout(36)">36路</button>
+	</div>
+	<div>
+		视频通道:<input type="text" id="inp_openchannel" value="1,2" />
+		企业地址:<input type="text" id="inp_media809url" value="http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600"
+			style="width:500px;" /><br />
+		服务地址:<input type="text" id="inp_mediaserver" value="rtmp://localhost:1935/app/publish" style="width:300px;" />
+		<input type="button" onclick="openVideo()" value="打开视频" /><br />
+		发送给媒体服务器的最后形式会是<span style="color: red">rtmp://localhost:1935/app/publish/http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600</span>
 	</div>
 </body>
+
 </html>

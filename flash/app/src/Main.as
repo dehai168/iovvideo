@@ -1,14 +1,9 @@
 package
 {
-	import flash.display.Sprite;
-	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.events.NetStatusEvent;
+	import flash.events.*;
 	import flash.display.*;
 	import flash.media.Video;
-	import flash.text.TextField;
-	import flash.text.TextFormat;
-	import flash.text.TextFormatAlign;
+	import flash.text.*;
 	import flash.external.ExternalInterface;
 	import flash.net.*;
 	
@@ -24,7 +19,10 @@ package
 		private var _boxSize:int = 0;      //当前布局盒子数量
 		private var _channelCount:int = 2; //通道个数
 		private var _selectedIndex:int = 0;//当前选择盒子索引值
+		private var _boxMaxIndex:int = 0;  //当前最大化盒子索引值
+		private var _lastBoxSize:int = 0;  //最近一次盒子数量,主要是放大以后恢复用
 		private var _license:String = "渝A123456_1(黄色)";  //当前车辆
+		private var _selectedColor:int = 0xDC143C;  //选中框颜色
 		
 		[Embed(source="../asset/stop.png")]
 		private var stopIcon:Class;
@@ -51,9 +49,10 @@ package
 			this.stage.showDefaultContextMenu = false;
 			this.stage.quality = StageQuality.BEST;
 			
+			
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
-		
+			
 			this.layout(4);
 			this.stage.addEventListener(Event.RESIZE, layoutResizeEvent);
 			this.jscallreg();
@@ -68,24 +67,32 @@ package
 			this._layoutWidth = this.stage.stageWidth;
 			this._layoutHeight = this.stage.stageHeight;
 			
-			this.initBox();
-			switch(boxSize)
+			try 
 			{
-				case 1:this.layout1();
-					break;
-				case 4:this.layout4();
-					break;
-				case 6:this.layout6();
-					break;
-				case 9:this.layout9();
-					break;
-				case 10:this.layout10();
-					break;
-				case 16:this.layout16();
-					break;
-				case 36:this.layout36();
-					break;
-				default:break;
+				this.initBox();
+				switch(boxSize)
+				{
+					case 1:this.layout1();
+						break;
+					case 4:this.layout4();
+						break;
+					case 6:this.layout6();
+						break;
+					case 9:this.layout9();
+						break;
+					case 10:this.layout10();
+						break;
+					case 16:this.layout16();
+						break;
+					case 36:this.layout36();
+						break;
+					default:break;
+				}
+				this.videoSelected();
+			}
+			catch (err:Error)
+			{
+				jsConsole('layout:' + err.message);
 			}
 		}
 		/**
@@ -95,26 +102,73 @@ package
 		{
 			if (this._boxTotal >= this._boxSize)
 			{
-				for (var j:int = 1; j <= this._boxSize; j++) 
-				{
-					this.layoutVisable(j, true);
+				if (this._boxMaxIndex != 0&& this._boxSize == 1)//双击最大化
+				{ 
+					for (var k1:int = 1; k1 <= this._boxTotal; k1++) 
+					{
+						if (k1 == this._boxMaxIndex){
+							this.layoutVisable(k1, true);
+						}else{
+							this.layoutVisable(k1, false);
+						}
+					}
+				}else if (this._selectedIndex != 0 && this._boxSize == 1){
+					for (var k2:int = 1; k2<= this._boxTotal; k2++) 
+					{
+						if (k2 == this._selectedIndex){
+							this.layoutVisable(k2, true);
+						}else{
+							this.layoutVisable(k2, false);
+						}
+					}
 				}
-				for (var k:int = (this._boxSize+1); k <= this._boxTotal; k++) 
+				else//正常窗口切换
 				{
-					this.layoutVisable(k, false);
+					for (var j:int = 1; j <= this._boxSize; j++) 
+					{
+						this.layoutVisable(j, true);
+					}
+					for (var k:int = (this._boxSize+1); k <= this._boxTotal; k++) 
+					{
+						this.layoutVisable(k, false);
+					}
 				}
 			}
 			else 
 			{
+				for (var j1:int = 1; j1 <= this._boxTotal; j1++) 
+				{
+					this.layoutVisable(j1, true);
+				}
 				for (var i:int = (this._boxTotal+1); i <= this._boxSize; i++) 
 				{
 					//外框
-					var boxBorder:Shape = new Shape();
-					boxBorder.name = "boxBorder_" + i;
-					boxBorder.graphics.lineStyle(0.5, 0x999999);
-					boxBorder.graphics.drawRect(0, 0, 10, 10);
-					boxBorder.graphics.endFill();
-					this.stage.addChild(boxBorder);
+					var boxContainer:Sprite = new Sprite();  // Sprite有MouseEvent事件,而Shape没有,切记！！！
+					boxContainer.name = "boxContainer_" + i;
+					boxContainer.graphics.lineStyle(0.5, 0x999999);
+					boxContainer.graphics.beginFill(0xe9e8e8, 1);
+					boxContainer.graphics.drawRect(0, 0, 10, 10);
+					boxContainer.graphics.endFill();
+					boxContainer.addEventListener(MouseEvent.CLICK,function (event:MouseEvent):void 
+					{
+						var boxContainer:Sprite = event.target as Sprite;
+						var name:String = boxContainer.name;
+						var index:String = name.split('_')[1];
+						
+						_selectedIndex = parseInt(index);
+						videoSelected();
+						
+					});
+					boxContainer.doubleClickEnabled = true;
+					boxContainer.addEventListener(MouseEvent.DOUBLE_CLICK,function (event:MouseEvent):void 
+					{
+						var boxContainer:Sprite = event.target as Sprite;
+						var name:String = boxContainer.name;
+						var index:String = name.split('_')[1];
+						
+						layoutMax(index);
+					});
+					this.stage.addChild(boxContainer);
 					
 					//视频
 					var boxVideo:BoxVideo = new BoxVideo(i+"");
@@ -143,10 +197,6 @@ package
 					poster.name = "boxPoster_" + i;
 					poster.smoothing = true;
 					this.stage.addChild(poster);
-					poster.addEventListener(MouseEvent.CLICK,function (event:MouseEvent):void 
-					{
-						jsConsole('click fuck');
-					});
 					
 					//信息部分
 					var boxIndex:TextField = new TextField();
@@ -267,6 +317,27 @@ package
 			}
 		}
 		/**
+		 * 视频选中
+		 * @param	i
+		 */
+		private function videoSelected():void
+		{
+			if (this._selectedIndex == 0){
+				return; //初始化的时候1个都没有选择
+			}
+			var boxContainer:Sprite = this.stage.getChildByName("boxContainer_" + this._selectedIndex) as Sprite;
+			var border:Shape = this.stage.getChildByName("selectedBorder") as Shape;
+			if (border != null){
+				this.stage.removeChild(border);
+			}
+			border = new Shape();
+			border.name = "selectedBorder";
+			border.graphics.lineStyle(0.5, _selectedColor);
+			border.graphics.drawRect(boxContainer.x, boxContainer.y, boxContainer.width, boxContainer.height);
+			border.graphics.endFill();
+			this.stage.addChild(border);
+		}
+		/**
 		 * 视频播放
 		 * @param	i
 		 */
@@ -321,13 +392,29 @@ package
 			boxVideo.mute();
 		}
 		/**
+		 * 单窗口最大化
+		 * @param	i
+		 */
+		private function layoutMax(i:String):void 
+		{
+			var index:int = parseInt(i);
+			if (this._boxMaxIndex != 0){ //已经最大化,需要最小化
+				this._boxMaxIndex = 0;
+				this.layout(this._lastBoxSize);
+			}else{ //正常模式,需要最大化
+				this._boxMaxIndex = index;
+				this._lastBoxSize = this._boxSize;
+				this.layout(1);
+			}
+		}
+		/**
 		 * 布局显示和隐藏
 		 * @param	i
 		 * @param	flag
 		 */
 		private function layoutVisable(i:int,flag:Boolean):void
 		{
-			var boxBorder:Shape = this.stage.getChildByName("boxBorder_" + i) as Shape;
+			var boxContainer:Sprite = this.stage.getChildByName("boxContainer_" + i) as Sprite;
 			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
 			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
 			var boxIndex:TextField = this.stage.getChildByName("boxIndex_" + i) as TextField;
@@ -339,7 +426,7 @@ package
 			var soundButton:SimpleButton = this.stage.getChildByName("soundbutton_" + i) as SimpleButton;
 			var playButton:SimpleButton = this.stage.getChildByName("playbutton_" + i) as SimpleButton;
 			
-			boxBorder.visible = flag;
+			boxContainer.visible = flag;
 			boxIndex.visible = flag;
 			boxTitle.visible = flag;
 			boxSpeed.visible = flag;
@@ -378,7 +465,7 @@ package
 		 */
 		private function layoutFactory(i:int,x:int,y:int,boxWidth:int,boxHeight:int):void
 		{
-			var boxBorder:Shape = this.stage.getChildByName("boxBorder_" + i) as Shape;
+			var boxContainer:Sprite = this.stage.getChildByName("boxContainer_" + i) as Sprite;
 			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
 			var poster:Bitmap = this.stage.getChildByName("boxPoster_" + i) as Bitmap;
 			var boxIndex:TextField = this.stage.getChildByName("boxIndex_" + i) as TextField;
@@ -394,10 +481,10 @@ package
 			var textSpace:int = 10;
 			var buttonSpace:int = 2;
 			
-			boxBorder.x = x;
-			boxBorder.y = y;
-			boxBorder.width = boxWidth;
-			boxBorder.height = boxHeight;
+			boxContainer.x = x;
+			boxContainer.y = y;
+			boxContainer.width = boxWidth;
+			boxContainer.height = boxHeight;
 			boxVideo.x = x + 1;
 			boxVideo.y = y + topHeight;
 			boxVideo.width = boxWidth - 2;
@@ -435,7 +522,11 @@ package
 			var boxHeight:int = this._layoutHeight - 4;
 			var x:int = 2;
 			var y:int = 2;
-			var i:int = 1;
+			var i:int = 1;  //默认窗口
+			
+			if (this._selectedIndex != 0){ //选择窗口
+				i = this._selectedIndex;
+			}
 			
 			this.layoutFactory(i, x, y, boxWidth, boxHeight);
 		}
@@ -471,56 +562,21 @@ package
 			var boxHeight:int = (this._layoutHeight - 8) / 3;
 			var x:int = 0;
 			var y:int = 0;
-			var index:int = 0;
-			var maxWidth:int = 0;
-			var maxHeight:int = 0;
+			var index:int = 3;
 			
-			for (var i:int = 1; i <= 6; i++) 
+			this.layoutFactory(1, 2, 2, boxWidth * 2 + 2, boxHeight * 2 + 2);
+			this.layoutFactory(2, boxWidth * 2 + 6, 2, boxWidth, boxHeight);
+			this.layoutFactory(3, boxWidth * 2 + 6,  boxHeight + 4, boxWidth, boxHeight);
+			for (var i:int = 3; i <= 3; i++) 
 			{
-				index = i;
-				switch (i) 
+				for (var j:int = 1; j <= 3; j++) 
 				{
-					case 1:
-						x = 2;
-						y = 2;
-						maxWidth = boxWidth * 2 + 2;
-						maxHeight = boxHeight * 2 + 2;
-						break;
-					case 2:
-						x = boxWidth * 2 + 6;
-						y = 2;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 3:
-						x = boxWidth * 2 + 6;
-						y = boxHeight + 4;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 4:
-						x = 2;
-						y = boxHeight * 2 + 6;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 5:
-						x = boxWidth + 4;
-						y = boxHeight * 2 + 6;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 6:
-						x = boxWidth * 2 + 6;
-						y = boxHeight * 2 + 6;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					default:
-						break;
+					x = boxWidth * (j - 1) + 2 * j;
+					y = boxHeight * (i - 1) + 2 * i;
+					index++;
+					
+					this.layoutFactory(index, x, y, boxWidth, boxHeight);
 				}
-				
-				this.layoutFactory(index, x, y, maxWidth, maxHeight);
 			}
 		}
 		/**
@@ -555,80 +611,21 @@ package
 			var boxHeight:int = (this._layoutHeight - 10) / 4;
 			var x:int = 0;
 			var y:int = 0;
-			var index:int = 0;
-			var maxWidth:int = 0;
-			var maxHeight:int = 0;
+			var index:int = 2;
 			
-			for (var i:int = 1; i <= 10; i++) 
+			this.layoutFactory(1, 2, 2, boxWidth * 2 + 2, boxHeight * 2 + 1);
+			this.layoutFactory(2, boxWidth * 2 + 6, 2, boxWidth * 2 + 2, boxHeight * 2 + 1);
+			
+			for (var i:int = 3; i <= 4; i++) 
 			{
-				index = i;
-				switch (i) 
+				for (var j:int = 1; j <= 4; j++) 
 				{
-					case 1:
-						x = 2;
-						y = 2;
-						maxWidth = boxWidth * 2+2;
-						maxHeight = boxHeight * 2+1;
-						break;
-					case 2:
-						x = boxWidth * 2 + 6;
-						y = 2;
-						maxWidth = boxWidth * 2+2;
-						maxHeight = boxHeight * 2+1;
-						break;
-					case 3:
-						x = 2;
-						y = boxHeight * 2 + 6;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 4:
-						x = boxWidth+4;
-						y = boxHeight * 2 + 6;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 5:
-						x = boxWidth*2 + 6;
-						y = boxHeight * 2 + 6;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 6:
-						x = boxWidth * 3 + 8;
-						y = boxHeight * 2 + 6;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 7:
-						x = 2;
-						y = boxHeight * 3 + 8;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 8:
-						x = boxWidth + 4;
-						y = boxHeight * 3 + 8;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 9:
-						x = boxWidth * 2 + 6;
-						y = boxHeight * 3 + 8;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					case 10:
-						x = boxWidth * 3 + 8;
-						y = boxHeight * 3 + 8;
-						maxWidth = boxWidth;
-						maxHeight = boxHeight;
-						break;
-					default:
-						break;
+					x = boxWidth * (j - 1) + 2 * j;
+					y = boxHeight * (i - 1) + 2 * i;
+					index++;
+					
+					this.layoutFactory(index, x, y, boxWidth, boxHeight);
 				}
-				
-				this.layoutFactory(index, x, y, maxWidth, maxHeight);
 			}
 		}
 		/**
@@ -721,9 +718,9 @@ package
 		 * js打印
 		 * @param	error
 		 */
-		private function jsConsole(error:String):void 
+		private function jsConsole(log:String):void 
 		{
-			this.calljs('console.log', error);
+			this.calljs('console.log', log);
 		}
 	}
 }
