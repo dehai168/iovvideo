@@ -21,7 +21,7 @@ package
 		private var timer:Timer;
 		private var index:String;
 		public var isplay:Boolean = false;
-		
+		public var mediaParam:String = "";     //媒体参数
 		
 		public function BoxVideo(index:String,width:int=1, height:int=1) 
 		{
@@ -39,8 +39,9 @@ package
 				nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
 			}
 		}
-		public function play():void 
+		public function play(param:String):void 
 		{
+			this.mediaParam = param;
 			nc.connect(this.mediaUrl);
 			
 			isplay = true;
@@ -53,6 +54,7 @@ package
 				
 				nc.close();
 				timer.stop();
+				this.clear();
 			}
 			isplay = false;
 		}
@@ -130,7 +132,7 @@ package
 			ns.soundTransform = new SoundTransform(0);
 			
 			this.attachNetStream(ns);
-			ns.play("bshdlive-pc");
+			ns.play(this.mediaParam);  //bshdlive-pc
 			
 			timer = new Timer(1000);
 			timer.addEventListener(TimerEvent.TIMER,function (event:TimerEvent):void 

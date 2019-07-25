@@ -80,16 +80,26 @@
 			};
 			var license = getLicense(media809url);
 			var plateColor = getPlateColor(media809url);
+			var flash = swfobject.getObjectById('app');
 			//var rtmpUrl = "rtmp://" + server + "/app/publish";
+			var list=[];
 			channelArray.forEach(element => {
-				console.log(license + '_' + element + '(' + plateColor + ')-' + server + '-' + urlConv(media809url, element));
+				//console.log(license + '_' + element + '(' + plateColor + ')-' + server + '-' + urlConv(media809url, element));
+				list.push({
+					license:license + '_' + element + '(' + plateColor + ')',
+					mediaUrl: server,
+					mediaParam:urlConv(media809url, element),
+				});
 			});
+			flash.openAll(list);
 		}
 		function playAll() {
-
+			var flash = swfobject.getObjectById('app');
+			var test = flash.playAll();
 		}
 		function stopAll() {
-
+			var flash = swfobject.getObjectById('app');
+			var test = flash.stopAll();
 		}
 	</script>
 	<style>
@@ -122,9 +132,9 @@
 	<div>
 		视频通道:<input type="text" id="inp_openchannel" value="1,2" />
 		企业地址:<input type="text" id="inp_media809url" value="http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600"
-			style="width:500px;" /><br />
-		服务地址:<input type="text" id="inp_mediaserver" value="rtmp://localhost:1935/app/publish" style="width:300px;" />
-		<input type="button" onclick="openVideo()" value="打开视频" /><br />
+			style="width:500px;" />(测试:bshdlive-pc)<br />
+		服务地址:<input type="text" id="inp_mediaserver" value="rtmp://127.0.0.1:12345/live?url=" style="width:300px;" />
+		<input type="button" onclick="openVideo()" value="打开视频" />(测试:rtmp://202.69.69.180:443/webcast/)<br />
 		发送给媒体服务器的最后形式会是<span style="color: red">rtmp://localhost:1935/app/publish/http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600</span>
 	</div>
 </body>
