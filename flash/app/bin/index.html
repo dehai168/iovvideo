@@ -30,6 +30,20 @@
 			var flash = swfobject.getObjectById('app');
 			var test = flash.layout(parm);
 		}
+		function nativeAjax(url) {
+			var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : ActiveXObject("microsoft.XMLHttp")
+			xhr.open("get", url, true);
+			xhr.send();
+			xhr.onreadysattechange = () => {
+				if (xhr.readystate == 4) {
+					if (xhr.status == 200) {
+						var data = xhr.responseTEXT;
+						//return data;
+						console.log(data);
+					}
+				}
+			}
+		}
 		function openVideo() {
 			var channel = document.getElementById("inp_openchannel").value;
 			var channelArray = channel.split(',');
@@ -82,15 +96,18 @@
 			var plateColor = getPlateColor(media809url);
 			var flash = swfobject.getObjectById('app');
 			//var rtmpUrl = "rtmp://" + server + "/app/publish";
-			var list=[];
+			var list = [];
 			channelArray.forEach(element => {
-				//console.log(license + '_' + element + '(' + plateColor + ')-' + server + '-' + urlConv(media809url, element));
+				var mediaParam = urlConv(media809url, element);
+				var httpUrl = 'http://' + server + ':12345/live?url=' + mediaParam;
+				nativeAjax(httpUrl);
 				list.push({
-					license:license + '_' + element + '(' + plateColor + ')',
-					mediaUrl: server,
-					mediaParam:urlConv(media809url, element),
+					license: license + '_' + element + '(' + plateColor + ')',
+					mediaUrl: 'rtmp://' + server + ':1935/live/',
+					mediaParam: mediaParam,
 				});
 			});
+			console.log(list);
 			flash.openAll(list);
 		}
 		function playAll() {
@@ -133,9 +150,10 @@
 		视频通道:<input type="text" id="inp_openchannel" value="1,2" />
 		企业地址:<input type="text" id="inp_media809url" value="http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600"
 			style="width:500px;" />(测试:bshdlive-pc)<br />
-		服务地址:<input type="text" id="inp_mediaserver" value="rtmp://127.0.0.1:12345/live?url=" style="width:300px;" />
-		<input type="button" onclick="openVideo()" value="打开视频" />(测试:rtmp://202.69.69.180:443/webcast/)<br />
-		发送给媒体服务器的最后形式会是<span style="color: red">rtmp://localhost:1935/app/publish/http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600</span>
+		服务地址:<input type="text" id="inp_mediaserver" value="127.0.0.1" style="width:300px;" />
+		<input type="button" onclick="openVideo()" value="打开视频" /><br />
+		发送给媒体服务器的最后形式会是<span
+			style="color: red">rtmp://localhost:1935/live/http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600</span>
 	</div>
 </body>
 
