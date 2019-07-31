@@ -31,20 +31,21 @@
 			var test = flash.layout(parm);
 		}
 		function nativeAjax(url, cb) {
-			var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : ActiveXObject("microsoft.XMLHttp")
-			xhr.open("get", url, true);
-			xhr.send();
-			xhr.onreadysattechange = () => {
-				if (xhr.readystate == 4) {
-					if (xhr.status == 200) {
-						var data = xhr.responseTEXT;
+			var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : ActiveXObject("microsoft.XMLHttp");
+			xhr.onreadystatechange = () => {
+				if (xhr.readyState == 4) {
+					if(xhr.status==200 || xhr.status==0){
+						var data = xhr.responseText;
 						console.log(data);
 						cb(true);
 					} else {
 						cb(false);
 					}
 				}
-			}
+			};
+			xhr.open("get", url, true);
+			xhr.send();
+
 		}
 		function openVideo() {
 			var channel = document.getElementById("inp_openchannel").value;
@@ -101,7 +102,7 @@
 			var list = [];
 			channelArray.forEach(element => {
 				var mediaParam = urlConv(media809url, element);
-				var httpUrl = 'http://' + server + ':12345/live?url=' + mediaParam;
+				var httpUrl = 'http://' + server + ':12345/live?url=' + encodeURIComponent(mediaParam);
 				(function (license, element, plateColor, server, httpUrl, mediaParam) {
 					nativeAjax(httpUrl, function (flag) {
 						var item = {
