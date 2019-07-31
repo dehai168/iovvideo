@@ -54,6 +54,7 @@ package
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
 			
+			this.layout(4);
 			this.stage.addEventListener(Event.RESIZE, layoutResizeEvent);
 			this.jscallreg();
 		}
@@ -96,35 +97,37 @@ package
 			}
 		}
 		/**
-		 * 打开所有通道
+		 * 打开通道
 		 * @param	list
 		 */
-		public function openAll(list:Array):void 
+		public function open(item:Object):void 
 		{
-			if (list.length > 36)
+			if (this._channelList.length > 36)
 			{
 				jsConsole('much channel');
 			}
 			else
 			{
-				this._channelList = list;
-				if (list.length <= 1){
-					this.layout(1);
-				}else if(list.length <= 4){
-					this.layout(4);
-				}else if(list.length <= 6){
-					this.layout(6);
-				}else if(list.length <= 9){
-					this.layout(9);
-				}else if(list.length <= 10){
-					this.layout(10);
-				}else if(list.length <= 16){
-					this.layout(16);
-				}else if(list.length <= 36){
-					this.layout(36);
+				this._channelList.push(item);
+				var length:int = this._channelList.length;
+				if (length > this._boxSize)
+				{
+					if(length <= 4){
+						this.layout(4);
+					}else if(length <= 6){
+						this.layout(6);
+					}else if(length <= 9){
+						this.layout(9);
+					}else if(length <= 10){
+						this.layout(10);
+					}else if(length <= 16){
+						this.layout(16);
+					}else if(length <= 36){
+						this.layout(36);
+					}
 				}
 				
-				this.playAll();
+				this.videoPlay(length + "");
 			}
 		}
 		/**
@@ -246,135 +249,166 @@ package
 					
 					/*------------------------------------------------------------*/
 					
-					var channel:Object = i <= this._channelList.length? this._channelList[i - 1]:null;
-					if (channel != null)
+					//视频
+					var boxVideo:BoxVideo = new BoxVideo(i+"");
+					boxVideo.name = "boxVideo_" + i;
+					boxVideo.addEventListener(BoxVideoEvent.INFO,function (event:BoxVideoEvent):void 
 					{
-						//视频
-						var boxVideo:BoxVideo = new BoxVideo(i+"");
-						boxVideo.name = "boxVideo_" + i;
-						boxVideo.addEventListener(BoxVideoEvent.INFO,function (event:BoxVideoEvent):void 
+						var boxSpeed:TextField = stage.getChildByName("boxSpeed_" + event.index) as TextField;
+						switch (event.key) 
 						{
-							var boxSpeed:TextField = stage.getChildByName("boxSpeed_" + event.index) as TextField;
-							switch (event.key) 
-							{
-								case "speed":
-									boxSpeed.text = event.value + "kb/s";
-								break;
-								default:
-							}
-						});
-						boxVideo.addEventListener(BoxVideoEvent.ERROR,function (event:BoxVideoEvent):void 
+							case "speed":
+								boxSpeed.text = event.value + "kb/s";
+							break;
+							default:
+						}
+					});
+					boxVideo.addEventListener(BoxVideoEvent.ERROR,function (event:BoxVideoEvent):void 
+					{
+						//jsConsole('error:'+ event.content);
+						var playButton:SimpleButton = stage.getChildByName("playbutton_" + event.index) as SimpleButton;
+						var boxSpeed:TextField = stage.getChildByName("boxSpeed_" + event.index) as TextField;
+						var boxError:TextField = stage.getChildByName("boxError_" + event.index) as TextField;
+						boxError.text = event.content;
+						boxError.visible = true;
+						switch (event.content) 
 						{
-							var boxError:TextField = stage.getChildByName("boxError_" + event.index) as TextField;
-							boxError.text = event.content;
-						});
-						this.stage.addChild(boxVideo);
+							case "closed":
+								playButton.visible = true;
+								boxSpeed.text = "";
+								boxError.text = "";
+							break;
+							default:
+						}
+					});
+					boxVideo.addEventListener(BoxVideoEvent.STATE,function (event:BoxVideoEvent):void 
+					{
+						//jsConsole('state:'+event.key);
+						var playButton:SimpleButton = stage.getChildByName("playbutton_" + event.index) as SimpleButton;
+						var boxError:TextField = stage.getChildByName("boxError_" + event.index) as TextField;
+						var stopButton:SimpleButton = stage.getChildByName("stopbutton_" + event.index) as SimpleButton;
+						var muteButton:SimpleButton = stage.getChildByName("mutebutton_" + event.index) as SimpleButton;
+						switch (event.key) 
+						{
+							case "start":
+								playButton.visible = false;
+								stopButton.visible = true;
+								muteButton.visible = true;
+							break;
+							default:
+						}
+					});
+					this.stage.addChild(boxVideo);
+					
+					
+					//车牌号
+					var boxTitle:TextField = new TextField();
+					var boxTitleText:TextFormat = new TextFormat();
+					boxTitleText.size = 12;
+					boxTitle.height = 20;
+					boxTitle.defaultTextFormat = boxTitleText;
+					boxTitle.text = "                                ";
+					boxTitle.width = 135;
+					boxTitle.name = "boxTitle_" + boxIndex.text;
+					this.stage.addChild(boxTitle);
+					//播放速度
+					var boxSpeed:TextField = new TextField();
+					var boxSpeedText:TextFormat = new TextFormat();
+					boxSpeedText.size = 12;
+					boxSpeed.height = 20;
+					boxSpeed.width = 65;
+					boxSpeed.defaultTextFormat = boxSpeedText;
+					boxSpeed.text = "                ";
+					boxSpeed.name = "boxSpeed_" + boxIndex.text;
+					this.stage.addChild(boxSpeed);
+					//错误信息
+					var boxError:TextField = new TextField();
+					var boxErrorText:TextFormat = new TextFormat();
+					boxErrorText.size = 12;
+					boxError.height = 20;
+					boxErrorText.color = 0xFF0000;
+					boxError.defaultTextFormat = boxErrorText;
+					boxError.text = "";
+					boxError.name = "boxError_" + boxIndex.text;
+					this.stage.addChild(boxError);
+					//停止按钮
+					var stopIconBitmap:Bitmap = new stopIcon();
+					stopIconBitmap.smoothing = true;
+					var stopButton:SimpleButton = new SimpleButton(stopIconBitmap,stopIconBitmap,stopIconBitmap,stopIconBitmap);
+					stopButton.width = 16;
+					stopButton.height = 16;
+					stopButton.useHandCursor = true;
+					stopButton.visible = true;
+					stopButton.name = "stopbutton_" + boxIndex.text;
+					stopButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
+					{
+						var clickButton:SimpleButton = e.currentTarget as SimpleButton;
+						var name:String = clickButton.name;
+						var index:String = name.split('_')[1];
 						
+						videoStop(index);
+					});
+					stopButton.visible = false;
+					this.stage.addChild(stopButton);
+					//静音按钮
+					var muteIconBitmap:Bitmap = new muteIcon();
+					muteIconBitmap.smoothing = true;
+					var muteButton:SimpleButton = new SimpleButton(muteIconBitmap,muteIconBitmap,muteIconBitmap,muteIconBitmap);
+					muteButton.width = 16;
+					muteButton.height = 16;
+					//muteButton.visible = true;
+					muteButton.name = "mutebutton_" + boxIndex.text;
+					muteButton.addEventListener(MouseEvent.CLICK,function (e:MouseEvent):void 
+					{
+						var clickButton:SimpleButton = e.currentTarget as SimpleButton;
+						var name:String = clickButton.name;
+						var index:String = name.split('_')[1];
+						clickButton.visible = false;
+						var temp:SimpleButton = stage.getChildByName('soundbutton_' + index) as SimpleButton;
+						temp.visible = true;
 						
-						//车牌号
-						var boxTitle:TextField = new TextField();
-						var boxTitleText:TextFormat = new TextFormat();
-						boxTitleText.size = 12;
-						boxTitle.height = 20;
-						boxTitle.defaultTextFormat = boxTitleText;
-						boxTitle.text = channel.license;
-						boxTitle.width = 180;
-						boxTitle.name = "boxTitle_" + boxIndex.text;
-						this.stage.addChild(boxTitle);
-						//播放速度
-						var boxSpeed:TextField = new TextField();
-						var boxSpeedText:TextFormat = new TextFormat();
-						boxSpeedText.size = 12;
-						boxSpeed.height = 20;
-						boxSpeed.defaultTextFormat = boxSpeedText;
-						boxSpeed.text = "";
-						boxSpeed.name = "boxSpeed_" + boxIndex.text;
-						this.stage.addChild(boxSpeed);
-						//错误信息
-						var boxError:TextField = new TextField();
-						var boxErrorText:TextFormat = new TextFormat();
-						boxErrorText.size = 12;
-						boxError.height = 20;
-						boxErrorText.color = 0xFF0000;
-						boxError.defaultTextFormat = boxErrorText;
-						boxError.text = "";
-						boxError.name = "boxError_" + boxIndex.text;
-						this.stage.addChild(boxError);
-						//停止按钮
-						var stopIconBitmap:Bitmap = new stopIcon();
-						stopIconBitmap.smoothing = true;
-						var stopButton:SimpleButton = new SimpleButton(stopIconBitmap,stopIconBitmap,stopIconBitmap,stopIconBitmap);
-						stopButton.width = 16;
-						stopButton.height = 16;
-						stopButton.useHandCursor = true;
-						stopButton.visible = true;
-						stopButton.name = "stopbutton_" + boxIndex.text;
-						stopButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
-						{
-							var clickButton:SimpleButton = e.currentTarget as SimpleButton;
-							var name:String = clickButton.name;
-							var index:String = name.split('_')[1];
-							
-							videoStop(index);
-						});
-						this.stage.addChild(stopButton);
-						//静音按钮
-						var muteIconBitmap:Bitmap = new muteIcon();
-						muteIconBitmap.smoothing = true;
-						var muteButton:SimpleButton = new SimpleButton(muteIconBitmap,muteIconBitmap,muteIconBitmap,muteIconBitmap);
-						muteButton.width = 16;
-						muteButton.height = 16;
-						muteButton.visible = true;
-						muteButton.name = "mutebutton_" + boxIndex.text;
-						muteButton.addEventListener(MouseEvent.CLICK,function (e:MouseEvent):void 
-						{
-							var clickButton:SimpleButton = e.currentTarget as SimpleButton;
-							var name:String = clickButton.name;
-							var index:String = name.split('_')[1];
-							clickButton.visible = false;
-							var temp:SimpleButton = stage.getChildByName('soundbutton_' + index) as SimpleButton;
-							temp.visible = true;
-							
-							videoSound(index);
-						});
-						this.stage.addChild(muteButton);
-						//播放声音按钮
-						var soundIconBitmap:Bitmap = new soundIcon();
-						soundIconBitmap.smoothing = true;
-						var soundButton:SimpleButton = new SimpleButton(soundIconBitmap,soundIconBitmap,soundIconBitmap,soundIconBitmap);
-						soundButton.width = 16;
-						soundButton.height = 16;
-						soundButton.visible = false;
-						soundButton.name = "soundbutton_" + boxIndex.text;
-						soundButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
-						{
-							var clickButton:SimpleButton = e.currentTarget as SimpleButton;
-							var name:String = clickButton.name;
-							var index:String = name.split('_')[1];
-							clickButton.visible = false;
-							var temp:SimpleButton = stage.getChildByName('mutebutton_' + index) as SimpleButton;
-							temp.visible = true;
-							
-							videoMute(index);
-						});
-						this.stage.addChild(soundButton);
-						//播放画面按钮
-						var bigplayIconBitmap:Bitmap = new bigplayIcon();
-						bigplayIconBitmap.smoothing = true;
-						var playButton:SimpleButton = new SimpleButton(bigplayIconBitmap,bigplayIconBitmap,bigplayIconBitmap,bigplayIconBitmap);
-						playButton.width = 58;
-						playButton.height = 58;
-						playButton.name = "playbutton_" + boxIndex.text;
-						playButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
-						{
-							var clickButton:SimpleButton = e.currentTarget as SimpleButton;
-							var name:String = clickButton.name;
-							var index:String = name.split('_')[1];
-							
-							videoPlay(index);
-						});
-						this.stage.addChild(playButton);
-					}
+						videoSound(index);
+					});
+					muteButton.visible = false;
+					this.stage.addChild(muteButton);
+					//播放声音按钮
+					var soundIconBitmap:Bitmap = new soundIcon();
+					soundIconBitmap.smoothing = true;
+					var soundButton:SimpleButton = new SimpleButton(soundIconBitmap,soundIconBitmap,soundIconBitmap,soundIconBitmap);
+					soundButton.width = 16;
+					soundButton.height = 16;
+					soundButton.visible = false;
+					soundButton.name = "soundbutton_" + boxIndex.text;
+					soundButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
+					{
+						var clickButton:SimpleButton = e.currentTarget as SimpleButton;
+						var name:String = clickButton.name;
+						var index:String = name.split('_')[1];
+						clickButton.visible = false;
+						var temp:SimpleButton = stage.getChildByName('mutebutton_' + index) as SimpleButton;
+						temp.visible = true;
+						
+						videoMute(index);
+					});
+					soundButton.visible = false;
+					this.stage.addChild(soundButton);
+					//播放画面按钮
+					var bigplayIconBitmap:Bitmap = new bigplayIcon();
+					bigplayIconBitmap.smoothing = true;
+					var playButton:SimpleButton = new SimpleButton(bigplayIconBitmap,bigplayIconBitmap,bigplayIconBitmap,bigplayIconBitmap);
+					playButton.width = 58;
+					playButton.height = 58;
+					playButton.name = "playbutton_" + boxIndex.text;
+					playButton.addEventListener(MouseEvent.CLICK, function(e:MouseEvent):void
+					{
+						var clickButton:SimpleButton = e.currentTarget as SimpleButton;
+						var name:String = clickButton.name;
+						var index:String = name.split('_')[1];
+						
+						videoPlay(index);
+					});
+					playButton.visible = false;
+					this.stage.addChild(playButton);
 					
 					this._boxTotal++;
 				}	
@@ -409,14 +443,14 @@ package
 		{
 			var channel:Object = this._channelList[parseInt(i)-1];
 			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
-			var playButton:SimpleButton = this.stage.getChildByName("playbutton_" + i) as SimpleButton;
+			var boxTitle:TextField = this.stage.getChildByName("boxTitle_" + i) as TextField;
+			
 			
 			boxVideo.setMediaUrl(channel.mediaUrl); //rtmp://202.69.69.180:443/webcast/
 			boxVideo.play(channel.mediaParam);
+			boxTitle.text = channel.license;
 			
 			jsConsole('[URI]:'+channel.mediaUrl+channel.mediaParam);
-			
-			playButton.visible = false;
 		}
 		/**
 		 * 视频停止
@@ -425,16 +459,8 @@ package
 		private function videoStop(i:String):void 
 		{
 			var boxVideo:BoxVideo = this.stage.getChildByName("boxVideo_" + i) as BoxVideo;
-			var playButton:SimpleButton = this.stage.getChildByName("playbutton_" + i) as SimpleButton;
-			var boxSpeed:TextField = this.stage.getChildByName("boxSpeed_" + i) as TextField;
-			var boxError:TextField = this.stage.getChildByName("boxError_" + i) as TextField;
 			
 			boxVideo.stop();
-			
-			boxSpeed.text = "";
-			boxError.text = "";
-			
-			playButton.visible = true;
 		}
 		/**
 		 * 视频放声
@@ -494,14 +520,13 @@ package
 			poster.visible = flag;
 			boxIndex.visible = flag;
 			
-			if (boxVideo != null)
+			if (i<=this._channelList.length)
 			{
 				boxTitle.visible = flag;
 				boxSpeed.visible = flag;
 				boxError.visible = flag;
 				stopButton.visible = flag;
-				muteButton.visible = flag;
-				soundButton.visible = flag;
+			
 				
 				if (!boxVideo.isplay) //没有播放
 				{
@@ -518,6 +543,33 @@ package
 						boxVideo.visible = false;
 					}
 					playButton.visible = false;
+					
+					if (boxVideo.isMuted)
+					{
+						if (flag)
+						{
+							muteButton.visible = true;
+							soundButton.visible = false;
+						}
+						else
+						{
+							muteButton.visible = false;
+							soundButton.visible = false;
+						}
+					}
+					else
+					{
+						if (flag)
+						{
+							muteButton.visible = false;
+							soundButton.visible = true;
+						}
+						else
+						{
+							muteButton.visible = false;
+							soundButton.visible = false;
+						}
+					}
 				}
 			}
 		}
@@ -563,31 +615,26 @@ package
 			boxIndex.x = x;
 			boxIndex.y = y;
 			
+			boxVideo.x = x + 1;
+			boxVideo.y = y + topHeight;
+			boxVideo.width = boxWidth - 2;
+			boxVideo.height = boxHeight - topHeight - 1;
 			
-			//
-			if (boxVideo != null)
-			{
-				boxVideo.x = x + 1;
-				boxVideo.y = y + topHeight;
-				boxVideo.width = boxWidth - 2;
-				boxVideo.height = boxHeight - topHeight - 1;
-				
-				boxTitle.x = x + boxIndex.textWidth;
-				boxTitle.y = y;
-				boxSpeed.x = boxTitle.x + boxTitle.textWidth + textSpace;
-				boxSpeed.y = y;
-				boxError.x = boxSpeed.x + (boxSpeed.textWidth == 0?40:boxSpeed.textWidth) + textSpace;
-				boxError.y = y;
-				
-				stopButton.x = x + boxWidth - (stopButton.width * 2) - buttonSpace * 2;
-				stopButton.y = y + 2;
-				muteButton.x = x + boxWidth - muteButton.width - buttonSpace;
-				muteButton.y = y + 2;
-				soundButton.x = x + boxWidth - soundButton.width - buttonSpace;
-				soundButton.y = y + 2;
-				playButton.x = x + boxWidth / 2 - playButton.width / 2;
-				playButton.y = y + boxHeight / 2 - playButton.height / 2 + topHeight;
-			}
+			boxTitle.x = x + boxIndex.textWidth;
+			boxTitle.y = y;
+			boxSpeed.x = boxTitle.x + boxTitle.textWidth + textSpace;
+			boxSpeed.y = y;
+			boxError.x = boxSpeed.x + (boxSpeed.textWidth == 0?40:boxSpeed.textWidth) + textSpace;
+			boxError.y = y;
+			
+			stopButton.x = x + boxWidth - (stopButton.width * 2) - buttonSpace * 2;
+			stopButton.y = y + 2;
+			muteButton.x = x + boxWidth - muteButton.width - buttonSpace;
+			muteButton.y = y + 2;
+			soundButton.x = x + boxWidth - soundButton.width - buttonSpace;
+			soundButton.y = y + 2;
+			playButton.x = x + boxWidth / 2 - playButton.width / 2;
+			playButton.y = y + boxHeight / 2 - playButton.height / 2 + topHeight;
 		}
 		/**
 		 * 1路布局
@@ -781,7 +828,7 @@ package
 			{
 				try 
 				{
-					ExternalInterface.addCallback('openAll', openAll);
+					ExternalInterface.addCallback('open', open);
 					ExternalInterface.addCallback('playAll', playAll);
 					ExternalInterface.addCallback('stopAll', stopAll);
 					ExternalInterface.addCallback('layout', layout);

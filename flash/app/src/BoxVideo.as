@@ -20,7 +20,8 @@ package
 		private var nsi:NetStreamInfo;
 		private var timer:Timer;
 		private var index:String;
-		public var isplay:Boolean = false;
+		public var isplay:Boolean = false;     //是否正在播放
+		public var isMuted:Boolean = true;     //是否静音
 		public var mediaParam:String = "";     //媒体参数
 		
 		public function BoxVideo(index:String,width:int=1, height:int=1) 
@@ -75,12 +76,14 @@ package
 		public function mute():void 
 		{
 			if (ns != null){
+				this.isMuted = true;
 				ns.soundTransform = new SoundTransform(0);
 			}
 		}
 		public function sound():void 
 		{
 			if (ns != null){
+				this.isMuted = false;
 				ns.soundTransform = new SoundTransform(1);
 			}
 		}
