@@ -57,6 +57,16 @@ package
 			this.layout(4);
 			this.stage.addEventListener(Event.RESIZE, layoutResizeEvent);
 			this.jscallreg();
+			
+			
+			// test
+			
+			open({
+				license:"test",
+				mediaUrl:"rtmp://129.28.172.45:1935/live/",
+				mediaParam:"渝A7H689.1.1.0.1564419600",
+				httpUrl:"http://129.28.172.45:12345/live?url=http://219.153.13.76:18020/%E6%B8%9DA7H689.1.1.0.1564419600"
+			});
 		}
 		/**
 		 * 布局
@@ -446,11 +456,12 @@ package
 			var boxTitle:TextField = this.stage.getChildByName("boxTitle_" + i) as TextField;
 			
 			
-			boxVideo.setMediaUrl(channel.mediaUrl); //rtmp://202.69.69.180:443/webcast/
+			boxVideo.setMediaUrl(channel.mediaUrl,channel.httpUrl); //rtmp://202.69.69.180:443/webcast/
 			boxVideo.play(channel.mediaParam);
 			boxTitle.text = channel.license;
 			
-			jsConsole('[URI]:'+channel.mediaUrl+channel.mediaParam);
+			jsConsole('[HTTP]:'+channel.httpUrl);
+			jsConsole('[RTMP]:'+channel.mediaUrl+channel.mediaParam);
 		}
 		/**
 		 * 视频停止

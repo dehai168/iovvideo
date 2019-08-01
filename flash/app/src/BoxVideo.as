@@ -3,11 +3,10 @@ package
 	import flash.events.TimerEvent;
 	import flash.media.SoundTransform;
 	import flash.media.Video;
-	import flash.events.NetStatusEvent;
-	import flash.events.SecurityErrorEvent;
+	import flash.events.*;
 	import flash.net.*;
 	import BoxVideoEvent;
-	import flash.utils.Timer;
+	import flash.utils.*;
 	/**
 	 * ...
 	 * @author level
@@ -15,14 +14,18 @@ package
 	public class BoxVideo extends Video
 	{
 		private var mediaUrl:String = "";    //媒体地址
-		private var nc:NetConnection;		 //
-		private var ns:NetStream;
+		private var httpUrl:String = "";     //链路地址
+		private var delayNumber:int = 3000;  //延时播放
+		private var delayFlag:uint;          //延时标志
+		private var nc:NetConnection=null;		 //
+		private var ns:NetStream=null;
 		private var nsi:NetStreamInfo;
 		private var timer:Timer;
 		private var index:String;
 		public var isplay:Boolean = false;     //是否正在播放
 		public var isMuted:Boolean = true;     //是否静音
 		public var mediaParam:String = "";     //媒体参数
+		private var requestor:URLLoader = new URLLoader(); 
 		
 		public function BoxVideo(index:String,width:int=1, height:int=1) 
 		{
@@ -31,29 +34,41 @@ package
 			this.smoothing = true;
 			this.index = index;
 		}
-		public function setMediaUrl(url:String):void 
+		public function setMediaUrl(url:String,httpUrl:String):void 
 		{
 			this.mediaUrl = url;
+			this.httpUrl = httpUrl;
 			if (this.mediaUrl.length > 0){
-				nc = new NetConnection();
-				nc.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
-				nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
+				connect();
 			}
+		}
+		private function connect():void 
+		{
+			nc = new NetConnection();
+			nc.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
+			nc.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
 		}
 		public function play(param:String):void 
 		{
 			this.mediaParam = param;
+			this.restServiceCall(this.httpUrl);
+		}
+		private function delayPlay():void 
+		{
+			connect();
 			nc.connect(this.mediaUrl);
-			
 			isplay = true;
+			clearTimeout(delayFlag);
 		}
 		public function stop():void 
 		{
 			if (ns != null){
 				ns.close();
 				ns.dispose();
+				ns = null;
 				
 				nc.close();
+				nc = null;
 				timer.stop();
 				this.clear();
 			}
@@ -130,6 +145,8 @@ package
 
         private function connectStream():void {
             ns = new NetStream(nc);
+			ns.bufferTime = 3;
+			ns.useHardwareDecoder = true;
 			ns.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
 			ns.client = new CustomClient();
 			ns.soundTransform = new SoundTransform(0);
@@ -140,11 +157,44 @@ package
 			timer = new Timer(1000);
 			timer.addEventListener(TimerEvent.TIMER,function (event:TimerEvent):void 
 			{
-				nsi = ns.info;
-				dispatchEvent(new BoxVideoEvent(BoxVideoEvent.INFO, index,"speed", (nsi.currentBytesPerSecond / (8 * 1024)).toFixed(2)+""));
+				if (ns != null){
+					nsi = ns.info;
+					dispatchEvent(new BoxVideoEvent(BoxVideoEvent.INFO, index,"speed", (nsi.currentBytesPerSecond / (8 * 1024)).toFixed(2)+""));
+				}
 			});
 			timer.start();
         }
+		
+		private function restServiceCall(httpUrl:String):void
+		{
+			//Create the HTTP request object
+			var request:URLRequest = new URLRequest(httpUrl);
+			request.method = URLRequestMethod.GET;
+			//Initiate the transaction
+			requestor = new URLLoader();
+			requestor.addEventListener(Event.COMPLETE, httpRequestComplete );
+			requestor.addEventListener(IOErrorEvent.IO_ERROR, httpRequestError );
+			requestor.addEventListener(SecurityErrorEvent.SECURITY_ERROR, httpRequestError );
+			requestor.addEventListener(HTTPStatusEvent.HTTP_STATUS, httpStatusHandler);
+			requestor.load( request );
+		}
+		private function httpStatusHandler(event:HTTPStatusEvent):void {
+            trace("httpStatusHandler: " + event);
+            trace("status: " + event.status);
+			if (event.status == 200)
+			{
+				delayFlag = setTimeout(delayPlay, delayNumber);
+			}
+        }
+		private function httpRequestComplete( event:Event ):void
+		{
+			trace( event.target.data );
+		}
+		private function httpRequestError( error:ErrorEvent ):void
+		{
+			dispatchEvent(new BoxVideoEvent(BoxVideoEvent.ERROR, index,"HTTP ERROR"));
+			trace( "An error occured: " + error.text );
+		}
 	}
 }
 class CustomClient {

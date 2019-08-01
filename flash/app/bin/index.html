@@ -34,7 +34,7 @@
 			var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : ActiveXObject("microsoft.XMLHttp");
 			xhr.onreadystatechange = () => {
 				if (xhr.readyState == 4) {
-					if(xhr.status==200 || xhr.status==0){
+					if (xhr.status == 200 || xhr.status == 0) {
 						var data = xhr.responseText;
 						console.log(data);
 						cb(true);
@@ -102,22 +102,25 @@
 			var list = [];
 			channelArray.forEach(element => {
 				var mediaParam = urlConv(media809url, element);
-				var httpUrl = 'http://' + server + ':12345/live?url=' + encodeURIComponent(mediaParam);
-				(function (license, element, plateColor, server, httpUrl, mediaParam) {
-					nativeAjax(httpUrl, function (flag) {
+				var httpUrl = 'http://' + server + ':12345/live?url=' + mediaParam;
+				//(function (license, element, plateColor, server, httpUrl, mediaParam) {
+				//	nativeAjax(httpUrl, function (flag) {
 						var item = {
 							license: license + '_' + element + '(' + plateColor + ')',
 							mediaUrl: 'rtmp://' + server + ':1935/live/',
-							mediaParam: flag ? encodeURIComponent(mediaParam) : "",
+							mediaParam: decodeURIComponent(mediaParam.split('/')[3]),
+							httpUrl:httpUrl,
 						};
 						// test
 						//item.mediaUrl="rtmp://202.69.69.180:443/webcast/";
 						//item.mediaParam="bshdlive-pc";
 						// test
-						console.log(item);
-						open(item);
-					});
-				})(license, element, plateColor, server, httpUrl, mediaParam);
+				//		window.setTimeout(function () {
+							console.log(item);
+							open(item);
+				//		}, 3000);
+				//	});
+				//})(license, element, plateColor, server, httpUrl, mediaParam);
 			});
 		}
 		function open(item) {
@@ -166,8 +169,7 @@
 			style="width:500px;" />(测试:bshdlive-pc)<br />
 		服务地址:<input type="text" id="inp_mediaserver" value="129.28.172.45" style="width:300px;" />
 		<input type="button" onclick="openVideo()" value="打开视频" /><br />
-		发送给媒体服务器的最后形式会是<span
-			style="color: red">rtmp://localhost:1935/live/http://219.153.13.76:18020/%E6%B8%9DA2H286.2.1.0.1562691600</span>
+		发送给媒体服务器的最后形式会是<span style="color: red">rtmp://129.28.172.45:1935/live/渝A7H689.1.2.0.1564419600</span>
 	</div>
 </body>
 
