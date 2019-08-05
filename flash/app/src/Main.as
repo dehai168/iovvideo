@@ -61,12 +61,12 @@ package
 			
 			// test
 			
-			open({
-				license:"test",
-				mediaUrl:"rtmp://129.28.172.45:1935/live/",
-				mediaParam:"渝A7H689.1.1.0.1564419600",
-				httpUrl:"http://129.28.172.45:12345/live?url=http://219.153.13.76:18020/%E6%B8%9DA7H689.1.1.0.1564419600"
-			});
+			//open({
+			//	license:"test",
+			//	mediaUrl:"rtmp://129.28.172.45:1935/live/",
+			//	mediaParam:"渝A7H689.1.1.0.1564419600",
+			//	httpUrl:"http://129.28.172.45:12345/live?url=http://219.153.13.76:18020/%E6%B8%9DA7H689.1.1.0.1564419600"
+			//});
 		}
 		/**
 		 * 布局

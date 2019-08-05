@@ -58,7 +58,7 @@ package
 			connect();
 			nc.connect(this.mediaUrl);
 			isplay = true;
-			clearTimeout(delayFlag);
+			//clearTimeout(delayFlag);
 		}
 		public function stop():void 
 		{
@@ -183,7 +183,8 @@ package
             trace("status: " + event.status);
 			if (event.status == 200)
 			{
-				delayFlag = setTimeout(delayPlay, delayNumber);
+				//delayFlag = setTimeout(delayPlay, delayNumber);
+				delayPlay();
 			}
         }
 		private function httpRequestComplete( event:Event ):void
