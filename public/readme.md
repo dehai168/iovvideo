@@ -15,22 +15,22 @@
 1. 把public整个目录放在可以托管静态资源的服务器目录下(不要调整images或js文件夹名称和相对public的路径)
 2. 方法1:在需要打开视频的页面通过打开浏览器新Tab页面的方式打开视频即调用:
     ```js
-    window.open('/public/app.html?xxxxxx','_blank')
+    window.open('/public/index.html?xxxxxx','_blank')
     ```
 3. 方法2:在需要打开视频的页面通过嵌入ifream的方式进行调用 
     ```html
-    <ifream src="/public/app.html?xxxxxx"></ifream>
+    <ifream src="/public/index.html?xxxxxx"></ifream>
     ```
 
 ### 参数说明
 
 key | 说明  |  备注  
 -|-|-
-license|车牌号|中文字符请使用url编码
-channel|通道个数|1-36
-mediaurl|809企业视频请求地址|http://[ip]:[port]/[车牌号码].[车牌颜色].[逻辑通道号].[音视频标志(0:音视频,1:音频,2:视频)].[时效口令],该参数只获取逻辑通道1的即可，其他通道由当前页面进行计算
-serverip|媒体服务器地址|
-serverport|媒体服务器端口|
+channel|通道数|1,2,3,4
+mediaurl|809企业视频地址|http://[ip]:[port]/[车牌号码].[车牌颜色].[逻辑通道号].[音视频标志(0:音视频,1:音频,2:视频)].[时效口令],该参数只获取逻辑通道1的即可，其他通道由当前页面进行计算,对该url进行参数编码
+serverip|媒体服务器地址|部署服务器ip
+httpport|http端口,可以不传|默认12345
+rtmpport|rtmp端口,可以不传|默认1935
 
 
 ### 注意事项
