@@ -116,7 +116,7 @@ package
 					dispatchEvent(new BoxVideoEvent(BoxVideoEvent.ERROR,index,"Net Rejected"));
 					break;
 				case "NetConnection.Connect.Closed":
-					dispatchEvent(new BoxVideoEvent(BoxVideoEvent.ERROR, index,"closed"));
+					dispatchEvent(new BoxVideoEvent(BoxVideoEvent.ERROR, index, "closed"));
 					break;
 				case "NetConnection.Connect.NetworkChange":
 					dispatchEvent(new BoxVideoEvent(BoxVideoEvent.ERROR, index,"NetworkChange"));
