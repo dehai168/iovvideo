@@ -20,6 +20,6 @@
   "homepage": "https://github.com/dehai168/iovvideo#readme",
   "devDependencies": {
     "express": "^4.17.1",
-    "node-media-server": "^2.1.0"
+    "node-media-server": "^2.1.9"
   }
 }
