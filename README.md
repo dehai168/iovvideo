@@ -54,4 +54,5 @@ rtmpport|rtmp端口,可以不传|默认1935
 1. 保证外网访问的端口都可以访问,通过配置防火墙
 3. 由于浏览器有并发下载限制，所以媒体服务默认配置了3组服务器满足18路视频并发.
 4. 由于参数中有多个.导致参数解析问题,需要修改 node-media-server/node_flv_session.js  63行内 split('.')=>split('.flv')
+5. 拷贝document下的3个js文件，覆盖到 node_modules/node-media-server
 5. 参考  https://github.com/illuspas/Node-Media-Server/blob/master/README_CN.md 

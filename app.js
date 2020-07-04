@@ -6,7 +6,7 @@ const appConfig = require('./config');
 //server
 const config = {
     rtmp: {
-        port: 1935,
+        port: 1936,
         chunk_size: 60000,
         gop_cache: true,
         ping: 30,
@@ -20,12 +20,8 @@ const config = {
     // rtmp中继地址
     relay: {
         ffmpeg: 'ffmpeg/bin/ffmpeg.exe',
+        edge: appConfig.rtmpedge,
         tasks: [
-            {
-                app: 'live',
-                mode: 'pull',
-                edge: appConfig.rtmpedge,
-            }
         ]
     }
 };

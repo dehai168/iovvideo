@@ -4,8 +4,7 @@
   "description": "h5 video，support flv,hls,   support h264,aac",
   "main": "index.js",
   "scripts": {
-    "startweb": "node server.js",
-    "startmedia": "node app.js",
+    "start": "node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

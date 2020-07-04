@@ -3,5 +3,6 @@ module.exports = {
     h5port2: 8001,                                  //flv 外网访问端口2(由于浏览器同源并发限制同时只能有6路下载)
     h5port3: 8002,                                  //flv 外网访问端口3(由于浏览器同源并发限制同时只能有6路下载)
     webport: 80,                                    //web 外网嵌入页面访问端口
-    rtmpedge: "rtmp://58.200.131.2:1935/livetv",    //rtmp 中继服务器地址(媒体服务器)
+    rtmpedge: "rtmp://127.0.0.1:1935/live",             //rtmp 中继服务器地址(媒体服务器)
+    //rtmpedge: "rtmp://58.200.131.2:1935/livetv",
 };
